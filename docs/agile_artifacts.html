@@ -165,6 +165,17 @@
 <p>Given the limited scope of a single-semester project, the decision was made to focus primarily on the <strong>Dungeon Master role</strong>, as this role derives the most direct value from campaign organization tools.</p>
 <p>The <strong>Player role</strong> may receive limited read-only capabilities in later iterations if capacity allows. Other roles were intentionally deferred to reduce complexity and maintain focus on delivering a functional MVP within the semester timeline.</p>
 <p>This scoping decision supports incremental delivery and prioritization of core value.</p>
+<h2 id="estimation-approach">Estimation Approach</h2>
+<p>LoreSmith user stories are estimated using story points on a Fibonacci scale (1, 2, 3, 5, 8, 13). Estimates reflect relative effort and uncertainty rather than time. The baseline story for anchoring estimates is <strong>Create NPC (3 points)</strong>. All other stories were estimated relative to this baseline, considering UI changes, database interactions, and overall complexity.</p>
+<h2 id="prioritization-approach">Prioritization Approach</h2>
+<p>LoreSmith user stories are prioritized using a quantitative 1–10 Business Value scale. Higher values represent greater impact to the primary user (Dungeon Master) and greater contribution to the MVP.</p>
+<p>Core CRUD functionality and hosted data persistence were prioritized highest, as they represent mandatory system capabilities. Visualization features were prioritized lower, as they provide enhanced insight but are not required for basic operation.</p>
+<p>Qualitatively, Kano analysis was applied:</p>
+<ul>
+<li>Mandatory: Core CRUD, Persistence</li>
+<li>Linear: Factions, Sessions, Search</li>
+<li>Exciters: Visualization features</li>
+</ul>
 
             
             

@@ -34,3 +34,19 @@ Given the limited scope of a single-semester project, the decision was made to f
 The **Player role** may receive limited read-only capabilities in later iterations if capacity allows. Other roles were intentionally deferred to reduce complexity and maintain focus on delivering a functional MVP within the semester timeline.
 
 This scoping decision supports incremental delivery and prioritization of core value.
+
+## Estimation Approach
+
+LoreSmith user stories are estimated using story points on a Fibonacci scale (1, 2, 3, 5, 8, 13). Estimates reflect relative effort and uncertainty rather than time. The baseline story for anchoring estimates is **Create NPC (3 points)**. All other stories were estimated relative to this baseline, considering UI changes, database interactions, and overall complexity.
+
+## Prioritization Approach
+
+LoreSmith user stories are prioritized using a quantitative 1–10 Business Value scale. Higher values represent greater impact to the primary user (Dungeon Master) and greater contribution to the MVP.
+
+Core CRUD functionality and hosted data persistence were prioritized highest, as they represent mandatory system capabilities. Visualization features were prioritized lower, as they provide enhanced insight but are not required for basic operation.
+
+Qualitatively, Kano analysis was applied:
+
+- Mandatory: Core CRUD, Persistence
+- Linear: Factions, Sessions, Search
+- Exciters: Visualization features
