@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import logging
+
 import psycopg
 import streamlit as st
+
+logger = logging.getLogger(__name__)
 
 
 def _get_db_conninfo() -> str:
@@ -18,10 +22,22 @@ def get_connection() -> psycopg.Connection:
 
 
 def can_connect() -> tuple[bool, str]:
+    """
+    Check if database is reachable.
+
+    Uses a fresh, short-lived connection to avoid polluting the cached
+    connection's transaction state.
+
+    Returns:
+        Tuple of (success: bool, message: str)
+    """
     try:
-        with get_connection().cursor() as cursor:
-            cursor.execute("select 1")
-            cursor.fetchone()
+        conninfo = _get_db_conninfo()
+        with psycopg.connect(conninfo=conninfo) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("select 1")
+                cursor.fetchone()
         return True, "Database connection is healthy."
-    except Exception as exc:
-        return False, f"Database connection failed: {exc}"
+    except Exception:
+        logger.exception("Database connection check failed.")
+        return False, "Database connection failed. Please check server logs for details."
