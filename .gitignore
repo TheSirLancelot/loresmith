@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# macOS system files
+.DS_Store
+*/.DS_Store
+
 # Distribution / packaging
 .Python
 build/
@@ -137,6 +141,7 @@ celerybeat.pid
 # Environments
 .env
 .envrc
+.streamlit/secrets.toml
 .venv
 env/
 venv/
