@@ -117,9 +117,9 @@ Only stable, demo-ready increments are merged from `dev` to `main`.
 - Do not commit secrets or credentials.
 - Use Streamlit secrets configuration for sensitive values.
 
-## Pre Commit Hooks
+## Pre-Commit Hooks
 
-This repository uses pre commit hooks to run Ruff checks and formatting before each commit.
+This repository uses pre-commit hooks to run Ruff checks and formatting before each commit.
 
 Set up once after cloning:
 
@@ -131,6 +131,21 @@ Set up once after cloning:
 Run hooks manually at any time:
 
 `pre-commit run --all-files`
+
+## Supabase Secrets Setup
+
+LoreSmith uses Streamlit secrets for the Supabase Postgres connection string.
+
+1. Create the secrets file:
+   `.streamlit/secrets.toml`
+2. Add in the required Supabase values
+
+Expected format:
+
+`[supabase]`
+`db_url = "postgresql://postgres:[YOUR_DB_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:5432/postgres"`
+
+For Streamlit Community Cloud, add the same values in App settings under Secrets.
 
 ---
 

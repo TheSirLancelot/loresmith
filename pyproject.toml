@@ -12,13 +12,17 @@ exclude = [
 select = ["E", "F", "W", "B", "I", "UP"]
 ignore = []
 
+# Streamlit entrypoints must import bootstrap first (even before third-party
+# imports like streamlit) to ensure sys.path is set correctly for multipage execution.
+# This violates standard isort ordering, so we disable I001 (import-block unsorted)
+# for these files.
 [tool.ruff.lint.per-file-ignores]
 "app/Home.py" = ["I001"]
 "app/pages/*.py" = ["I001"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
-force-to-top = ["app.bootstrap"]
+force-to-top = ["bootstrap"]
 
 [tool.ruff.format]
 quote-style = "double"
