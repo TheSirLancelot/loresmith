@@ -10,7 +10,7 @@ exclude = [
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "B", "I", "UP"]
-ignore = ["E501"]
+ignore = []
 
 [tool.ruff.lint.per-file-ignores]
 "app/Home.py" = ["I001"]
