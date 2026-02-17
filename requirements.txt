@@ -31,6 +31,7 @@ rpds-py==0.30.0
 ruff==0.9.7
 six==1.17.0
 smmap==5.0.2
+sqlalchemy==2.0.35
 streamlit==1.54.0
 tenacity==9.1.4
 toml==0.10.2
