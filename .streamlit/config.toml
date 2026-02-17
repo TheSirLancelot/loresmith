@@ -1,0 +1,9 @@
+[theme]
+base="dark"
+primaryColor = "deeppink"
+backgroundColor = "midnightblue"
+secondaryBackgroundColor = "slategray"
+textColor = "ghostwhite"
+
+[server]
+headless=true
