@@ -117,6 +117,21 @@ Only stable, demo-ready increments are merged from `dev` to `main`.
 - Do not commit secrets or credentials.
 - Use Streamlit secrets configuration for sensitive values.
 
+## Pre Commit Hooks
+
+This repository uses pre commit hooks to run Ruff checks and formatting before each commit.
+
+Set up once after cloning:
+
+1. Install dependencies:
+   `pip install -r requirements.txt`
+2. Install hooks:
+   `pre-commit install`
+
+Run hooks manually at any time:
+
+`pre-commit run --all-files`
+
 ---
 
 ## Sprint Discipline
