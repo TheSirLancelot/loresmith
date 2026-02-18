@@ -7,18 +7,21 @@ from sqlalchemy import select
 
 page_header("NPCs", "Create, manage, and explore characters.")
 
-session = get_session()
+try:
+    with get_session() as session:
+        records = session.execute(select(NPC).order_by(NPC.name)).scalars().all()
 
-with session:
-    records = session.execute(select(NPC)).scalars().all()
-
-    if not records:
-        st.info('No NPCs found in the database.')
-    else:
-        for item in records:
-            with st.expander(f'{item.name}'):
-                st.write(f'Status: {item.status.upper()}')
-                st.write(f'Description: {item.description}')
+        if not records:
+            st.info("No NPCs found in the database.")
+        else:
+            for item in records:
+                with st.expander(f"{item.name}"):
+                    st.write(f"Status: {item.status.upper()}")
+                    st.write(f"Description: {item.description}")
+except Exception:
+    st.error(
+        "Unable to connect to the database. Please check your configuration or try again later."
+    )
 
 st.subheader("Planned Capabilities")
 
