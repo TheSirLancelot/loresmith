@@ -20,7 +20,8 @@ try:
                     st.write(f"Description: {item.description}")
 except Exception:
     st.error(
-        "Unable to connect to the database. Please check your configuration or try again later."
+        "Unable to connect to the database. "
+        + "Please check your configuration or try again later. Error: {exc}"
     )
 
 st.subheader("Planned Capabilities")
