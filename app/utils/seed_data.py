@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.db.migrations import get_session
 from app.db.schema import NPC
@@ -19,40 +19,40 @@ def seed_test_npcs() -> None:
             name="Aldric the Wise",
             description="An elderly wizard who serves as the kingdom's chief advisor.",
             status="active",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         ),
         NPC(
             id=uuid.uuid4(),
             name="Lyra Shadowblade",
             description="A skilled rogue with a mysterious past and hidden loyalties.",
             status="active",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         ),
         NPC(
             id=uuid.uuid4(),
             name="Brother Thorne",
             description="A holy priest devoted to spreading light and righteousness.",
             status="active",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         ),
         NPC(
             id=uuid.uuid4(),
             name="Mira Stoneheart",
             description="A dwarf warrior renowned for her strength and honor.",
             status="active",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         ),
         NPC(
             id=uuid.uuid4(),
             name="Lord Vex",
             description="A dangerous noble with ambitions that threaten the realm.",
             status="active",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         ),
     ]
 
