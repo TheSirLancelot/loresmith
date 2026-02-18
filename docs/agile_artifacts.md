@@ -98,7 +98,7 @@ Visualization features were prioritized lower, as they provide enhanced insight 
 - Linear: Factions, Sessions, Search
 - Exciters: Visualization features
 
-## This prioritization ensures early delivery of core value while preserving flexibility for feature expansion.
+This prioritization ensures early delivery of core value while preserving flexibility for feature expansion.
 
 ## Database Architecture
 
