@@ -147,6 +147,18 @@ Expected format:
 
 For Streamlit Community Cloud, add the same values in App settings under Secrets.
 
+## Test Data Seeding
+
+To populate the database with sample NPCs for development and testing:
+
+```bash
+python -m app.utils.seed_data
+```
+
+This script inserts 5 reference NPCs (Aldric the Wise, Lyra Shadowblade, Brother Thorne, Mira Stoneheart, and Lord Vex) into the database. Use this to quickly populate test data without manual entry.
+
+The seed script is safe to run multiple times; it appends new records each time.
+
 ---
 
 ## Sprint Discipline
