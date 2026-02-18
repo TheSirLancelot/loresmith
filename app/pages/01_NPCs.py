@@ -18,10 +18,10 @@ try:
                 with st.expander(f"{item.name}"):
                     st.write(f"Status: {item.status.upper()}")
                     st.write(f"Description: {item.description}")
-except Exception:
+except Exception as exc:
     st.error(
         "Unable to connect to the database. "
-        + "Please check your configuration or try again later. Error: {exc}"
+        + f"Please check your configuration or try again later. Error: {exc}"
     )
 
 st.subheader("Planned Capabilities")
