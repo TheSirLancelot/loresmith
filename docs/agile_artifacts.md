@@ -98,4 +98,45 @@ Visualization features were prioritized lower, as they provide enhanced insight 
 - Linear: Factions, Sessions, Search
 - Exciters: Visualization features
 
-This prioritization ensures early delivery of core value while preserving flexibility for feature expansion.
+## This prioritization ensures early delivery of core value while preserving flexibility for feature expansion.
+
+## Database Architecture
+
+LoreSmith uses a phased database approach optimized for Sprint 1 MVP delivery:
+
+### Tech Stack
+
+- **Database**: Supabase Postgres (managed cloud PostgreSQL)
+- **ORM**: SQLAlchemy 2.0 (declarative schema definition and query building)
+- **Driver**: psycopg 3 (native Python Postgres driver)
+- **Secrets Management**: Streamlit Secrets (connection string stored locally, never committed)
+
+### Schema Strategy
+
+Schemas are defined declaratively in Python using SQLAlchemy ORM (`app/db/schema.py`). The `setup_schema()` function inspects the database at app startup and creates missing tables automatically.
+
+- **Advantages**: Schema-as-code, version controlled, simple to understand
+- **Current Limitation**: No formal migration versioning (suitable for active development)
+
+### Migration Approach
+
+**Sprint 1 (Current)**:
+
+- Manual schema drops and recreates via Supabase dashboard
+- Auto-creation at app startup via `setup_schema()`
+- Test data seeding via `python -m app.utils.seed_data`
+
+**Future (When schema stabilizes)**:
+
+- Alembic integration for tracked, reversible migrations
+- Safe rollback and production deployment support
+
+### Data Initialization
+
+A seed script (`app/utils/seed_data.py`) provides repeatable test data creation. Developers can populate the database with reference NPCs without manual entry.
+
+### Security & Configuration
+
+Database connection strings are read from Streamlit Secrets (`[supabase] db_url`), ensuring credentials are never hardcoded or committed to version control. This pattern scales seamlessly to Streamlit Community Cloud production deployments.
+
+---
