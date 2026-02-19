@@ -48,9 +48,23 @@ def setup_schema() -> tuple[bool, str]:
             Base.metadata.create_all(engine)
             msg = f"Created {len(tables_to_create)} table(s): {', '.join(tables_to_create)}"
             logger.info(msg)
-            return True, msg
 
-        return True, "All tables already exist."
+        if "npc" in inspector.get_table_names() or "npc" in Base.metadata.tables:
+            with engine.begin() as conn:
+                conn.exec_driver_sql("create extension if not exists pgcrypto")
+                conn.exec_driver_sql(
+                    "alter table npc alter column id set default gen_random_uuid()"
+                )
+                conn.exec_driver_sql("alter table npc alter column description set default ''")
+                conn.exec_driver_sql("alter table npc alter column status set default 'active'")
+                conn.exec_driver_sql(
+                    "alter table npc alter column created_at set default timezone('utc', now())"
+                )
+                conn.exec_driver_sql(
+                    "alter table npc alter column updated_at set default timezone('utc', now())"
+                )
+
+        return True, "Schema is ready and defaults are enforced."
     except Exception:
         logger.exception("Schema setup failed during schema initialization.")
         user_msg = "Schema setup failed. Please check server logs for details."

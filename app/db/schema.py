@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Column, DateTime, String, Text
+from sqlalchemy import Column, DateTime, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base
 
@@ -17,15 +16,25 @@ class NPC(Base):
 
     __tablename__ = "npc"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
     name = Column(String(255), nullable=False)
-    description = Column(Text, default="")
-    status = Column(String(50), nullable=False, default="active")
-    created_at = Column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
-    updated_at = Column(
-        DateTime,
+    description = Column(Text, nullable=False, server_default=text("''"))
+    status = Column(String(50), nullable=False, server_default=text("'active'"))
+    created_at = Column(
+        DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(UTC),
+        server_default=text("timezone('utc', now())"),
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        server_default=text("timezone('utc', now())"),
         onupdate=lambda: datetime.now(UTC),
     )
 
