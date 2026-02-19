@@ -1,5 +1,6 @@
 import bootstrap  # noqa: F401
 import streamlit as st
+import logging
 from app.components.layout import page_header
 from app.db.migrations import get_session
 from app.db.schema import NPC
@@ -7,21 +8,25 @@ from sqlalchemy import select
 
 page_header("NPCs", "Create, manage, and explore characters.")
 
-with st.form("new_npc_form", clear_on_submit=False):
+with st.form("new_npc_form", clear_on_submit=True):
     st.subheader("Create New NPC")
-    st.write("All fields are required.")
+    st.write("Name and status are required. Description is optional.")
 
-    name = st.text_input("Name")
-    status = st.text_input("Status")
-    description = st.text_area("Description")
+    name_field = st.text_input("Name")
+    status_field = st.text_input("Status")
+    description_field = st.text_area("Description")
     submit = st.form_submit_button("Create NPC")
 
     if submit:
+        name = name_field.strip()
+        status = status_field.strip()
+        description = description_field.strip()
+
         # Check if name is empty
-        if not name.strip():
+        if not name:
             st.error("Name cannot be empty.")
         # Check if status is empty
-        elif not status.strip():
+        elif not status:
             st.error("Status cannot be empty.")
         else:
             try:
@@ -30,12 +35,12 @@ with st.form("new_npc_form", clear_on_submit=False):
                     session.commit()
 
                 st.success(f"{name} created!")
-                st.rerun()
             except Exception as exc:
                 st.error(
                     "Unable to connect to the database. "
-                    + f"Please check your configuration or try again later. Error: {exc}"
+                    + "Please check your configuration or try again later."
                 )
+                logging.getLogger("connection").exception(exc)
 
 st.divider()
 
