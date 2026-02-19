@@ -55,6 +55,13 @@ try:
                 with st.expander(f"{item.name}"):
                     st.write(f"Status: {item.status.upper()}")
                     st.write(f"Description: {item.description}")
+
+                    if st.button("Delete", key=f"btn_{item.id}", type="primary"):
+                        npc = session.query(NPC).filter(NPC.id == item.id).first()
+                        if npc:
+                            session.delete(npc)
+                            session.commit()
+                            st.rerun()
 except Exception as exc:
     st.error(
         "Unable to connect to the database. "
