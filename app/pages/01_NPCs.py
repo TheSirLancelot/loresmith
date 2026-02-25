@@ -120,6 +120,10 @@ try:
                                             + "Please check your configuration or try again later."
                                         )
                                         logging.getLogger("connection").exception(exc)
+                                if st.button("Cancel", key="update_cancel_btn", type="secondary"):
+                                    st.session_state["edit_status"] = False
+                                    st.session_state["edit_npc_id"] = None
+                                    st.rerun()
 except Exception as exc:
     st.error(
         "Unable to connect to the database. "
