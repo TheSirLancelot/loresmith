@@ -122,6 +122,22 @@ try:
                                     st.session_state["edit_status"] = False
                                     st.session_state["edit_npc_id"] = None
                                     st.rerun()
+                    else:
+                        with st.expander(f"{item.name}"):
+                            st.write(f"Status: {item.status.upper()}")
+                            st.write(f"Description: {item.description}")
+
+                            if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
+                                st.session_state["edit_status"] = True
+                                st.session_state["npc_edit_id"] = item.id
+                                st.rerun()
+
+                            if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
+                                npc = session.query(NPC).filter(NPC.id == item.id).first()
+                                if npc:
+                                    session.delete(npc)
+                                    session.commit()
+                                    st.rerun()
 except Exception as exc:
     st.error(
         "Unable to connect to the database. "
