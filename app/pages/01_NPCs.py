@@ -87,15 +87,13 @@ try:
                             updated_status = edit_npc_status.strip()
                             updated_description = edit_npc_desc.strip()
 
-                            if not updated_name:
-                                st.error("Name cannot be empty.")
-                            # Check if status is empty
-                            elif not updated_status:
-                                st.error("Status cannot be empty.")
-                            else:
-                                if st.button(
-                                    "Update", key=f"update_btn_{item.id}", type="secondary"
-                                ):
+                            if st.button("Update", key=f"update_btn_{item.id}", type="secondary"):
+                                if not updated_name:
+                                    st.error("Name cannot be empty.")
+                                # Check if status is empty
+                                elif not updated_status:
+                                    st.error("Status cannot be empty.")
+                                else:
                                     try:
                                         npc = session.query(NPC).filter(NPC.id == item.id).first()
                                         if npc is None:
