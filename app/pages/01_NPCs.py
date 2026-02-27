@@ -118,10 +118,10 @@ try:
                                             + "Please check your configuration or try again later."
                                         )
                                         logging.getLogger("connection").exception(exc)
-                                if st.button("Cancel", key="update_cancel_btn", type="secondary"):
-                                    st.session_state["edit_status"] = False
-                                    st.session_state["edit_npc_id"] = None
-                                    st.rerun()
+                            if st.button("Cancel", key="update_cancel_btn", type="secondary"):
+                                st.session_state["edit_status"] = False
+                                st.session_state["npc_edit_id"] = None
+                                st.rerun()
                     else:
                         with st.expander(f"{item.name}"):
                             st.write(f"Status: {item.status.upper()}")
