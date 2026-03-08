@@ -35,8 +35,11 @@ class NPC(Base):
         onupdate=lambda: datetime.now(UTC),
     )
 
-    __table_args__ = CheckConstraint(
-        "NOT (image_bytes IS NOT NULL AND image_url IS NOT NULL)", name="check_at_most_one_filled"
+    __table_args__ = (
+        CheckConstraint(
+            "NOT (image_bytes IS NOT NULL AND image_url IS NOT NULL)",
+            name="check_at_most_one_filled",
+        ),
     )
 
     def __repr__(self) -> str:
