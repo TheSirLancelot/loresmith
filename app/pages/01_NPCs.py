@@ -20,12 +20,16 @@ with st.form("new_npc_form", clear_on_submit=True):
     name_field = st.text_input("Name")
     status_field = st.text_input("Status")
     description_field = st.text_area("Description")
+    image_bytes_field = st.file_uploader("Upload Image")
+    image_url_field = st.text_input("Image URL")
     submit = st.form_submit_button("Create NPC")
 
     if submit:
         name = name_field.strip()
         status = status_field.strip()
         description = description_field.strip()
+        image_bytes = None
+        image_url = None
 
         # Check if name is empty
         if not name:
@@ -33,10 +37,24 @@ with st.form("new_npc_form", clear_on_submit=True):
         # Check if status is empty
         elif not status:
             st.error("Status cannot be empty.")
+        elif image_bytes_field and image_url_field:
+            st.error("Can only upload image or provide image URL, not both!")
         else:
             try:
                 with get_session() as session:
-                    session.add(NPC(name=name, status=status, description=description))
+                    if image_bytes_field:
+                        image_bytes = image_bytes_field.getvalue()
+                    elif image_url_field:
+                        image_url = image_url_field.strip()
+                    session.add(
+                        NPC(
+                            name=name,
+                            status=status,
+                            description=description,
+                            image_bytes=image_bytes,
+                            image_url=image_url,
+                        )
+                    )
                     session.commit()
 
                 st.success(f"{name} created!")
