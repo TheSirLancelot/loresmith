@@ -8,8 +8,8 @@ from sqlalchemy import select
 
 page_header("NPCs", "Create, manage, and explore characters.")
 
-if "edit_status" not in st.session_state:
-    st.session_state["edit_status"] = False
+if "npc_edit_status" not in st.session_state:
+    st.session_state["npc_edit_status"] = False
 if "npc_edit_id" not in st.session_state:
     st.session_state["npc_edit_id"] = None
 
@@ -56,14 +56,14 @@ try:
         if not records:
             st.info("No NPCs found in the database.")
         else:
-            if not st.session_state["edit_status"]:
+            if not st.session_state["npc_edit_status"]:
                 for item in records:
                     with st.expander(f"{item.name}"):
                         st.write(f"Status: {item.status.upper()}")
                         st.write(f"Description: {item.description}")
 
                         if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
-                            st.session_state["edit_status"] = True
+                            st.session_state["npc_edit_status"] = True
                             st.session_state["npc_edit_id"] = item.id
                             st.rerun()
 
@@ -98,7 +98,7 @@ try:
                                         npc = session.query(NPC).filter(NPC.id == item.id).first()
                                         if npc is None:
                                             st.error("This NPC no longer exists.")
-                                            st.session_state["edit_status"] = False
+                                            st.session_state["npc_edit_status"] = False
                                             st.session_state["npc_edit_id"] = None
                                             st.rerun()
 
@@ -107,7 +107,7 @@ try:
                                         npc.description = updated_description
                                         session.commit()
 
-                                        st.session_state["edit_status"] = False
+                                        st.session_state["npc_edit_status"] = False
                                         st.session_state["npc_edit_id"] = None
 
                                         st.rerun()
@@ -119,7 +119,7 @@ try:
                                         )
                                         logging.getLogger("connection").exception(exc)
                             if st.button("Cancel", key="update_cancel_btn", type="secondary"):
-                                st.session_state["edit_status"] = False
+                                st.session_state["npc_edit_status"] = False
                                 st.session_state["npc_edit_id"] = None
                                 st.rerun()
                     else:
@@ -128,7 +128,7 @@ try:
                             st.write(f"Description: {item.description}")
 
                             if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
-                                st.session_state["edit_status"] = True
+                                st.session_state["npc_edit_status"] = True
                                 st.session_state["npc_edit_id"] = item.id
                                 st.rerun()
 
