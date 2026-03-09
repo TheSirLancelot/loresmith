@@ -149,6 +149,10 @@ try:
                                 # Check if status is empty
                                 elif not updated_status:
                                     st.error("Status cannot be empty.")
+                                elif edit_npc_image_bytes and edit_npc_image_url:
+                                    st.error(
+                                        "Can only upload image or provide image URL, not both!"
+                                    )
                                 else:
                                     try:
                                         npc = session.query(NPC).filter(NPC.id == item.id).first()
@@ -161,6 +165,10 @@ try:
                                         npc.name = updated_name
                                         npc.status = updated_status
                                         npc.description = updated_description
+                                        if edit_npc_image_bytes:
+                                            npc.image_bytes = edit_npc_image_bytes.getvalue()
+                                        elif edit_npc_image_url:
+                                            npc.image_url = edit_npc_image_url
                                         session.commit()
 
                                         st.session_state["edit_status"] = False
@@ -180,20 +188,53 @@ try:
                                 st.rerun()
                     else:
                         with st.expander(f"{item.name}"):
-                            st.write(f"Status: {item.status.upper()}")
-                            st.write(f"Description: {item.description}")
+                            col1, col2 = st.columns([1, 6])
 
-                            if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
-                                st.session_state["edit_status"] = True
-                                st.session_state["npc_edit_id"] = item.id
-                                st.rerun()
+                            with col1:
+                                if item.image_bytes:
+                                    img = Image.open(io.BytesIO(item.image_bytes))
+                                    width, height = img.size
+                                    aspect_ratio = width / height
+                                    resized_img = img.resize((175, int(175 * aspect_ratio)))
+                                    st.image(resized_img)
+                                elif item.image_url:
+                                    res = requests.get(item.image_url)
+                                    if res.status_code == 200:
+                                        img = Image.open(io.BytesIO(res.content))
+                                        width, height = img.size
+                                        aspect_ratio = width / height
+                                        resized_img = img.resize((175, int(175 * aspect_ratio)))
+                                        st.image(resized_img)
+                                    else:
+                                        st.error("Could not load image from URL.")
+                                else:
+                                    res = requests.get(
+                                        "https://www.nicepng.com/png/full/110-1102214_amanda-m-blank-profile-face-png.png"
+                                    )
+                                    if res.status_code == 200:
+                                        img = Image.open(io.BytesIO(res.content))
+                                        width, height = img.size
+                                        aspect_ratio = width / height
+                                        resized_img = img.resize((175, int(175 * aspect_ratio)))
+                                        st.image(resized_img)
+                                    else:
+                                        st.error("Could not default image.")
 
-                            if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
-                                npc = session.query(NPC).filter(NPC.id == item.id).first()
-                                if npc:
-                                    session.delete(npc)
-                                    session.commit()
+                            with col2:
+                                st.write(f"Status: {item.status.upper()}")
+                                st.write(f"Description: {item.description}")
+
+                                if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
+                                    st.session_state["edit_status"] = True
+                                    st.session_state["npc_edit_id"] = item.id
                                     st.rerun()
+
+                                if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
+                                    npc = session.query(NPC).filter(NPC.id == item.id).first()
+                                    if npc:
+                                        session.delete(npc)
+                                        session.commit()
+                                        st.rerun()
 except Exception as exc:
     st.error(
         "Unable to connect to the database. "
