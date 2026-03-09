@@ -1,9 +1,12 @@
 import bootstrap  # noqa: F401
+import io
 import streamlit as st
 import logging
+import requests
 from app.components.layout import page_header
 from app.db.migrations import get_session
 from app.db.schema import NPC
+from PIL import Image
 from sqlalchemy import select
 
 page_header("NPCs", "Create, manage, and explore characters.")
@@ -77,20 +80,53 @@ try:
             if not st.session_state["edit_status"]:
                 for item in records:
                     with st.expander(f"{item.name}"):
-                        st.write(f"Status: {item.status.upper()}")
-                        st.write(f"Description: {item.description}")
+                        col1, col2 = st.columns([1, 6])
 
-                        if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
-                            st.session_state["edit_status"] = True
-                            st.session_state["npc_edit_id"] = item.id
-                            st.rerun()
+                        with col1:
+                            if item.image_bytes:
+                                img = Image.open(io.BytesIO(item.image_bytes))
+                                width, height = img.size
+                                aspect_ratio = width / height
+                                resized_img = img.resize((175, int(175 * aspect_ratio)))
+                                st.image(resized_img)
+                            elif item.image_url:
+                                res = requests.get(item.image_url)
+                                if res.status_code == 200:
+                                    img = Image.open(io.BytesIO(res.content))
+                                    width, height = img.size
+                                    aspect_ratio = width / height
+                                    resized_img = img.resize((175, int(175 * aspect_ratio)))
+                                    st.image(resized_img)
+                                else:
+                                    st.error("Could not load image from URL.")
+                            else:
+                                res = requests.get(
+                                    "https://www.nicepng.com/png/full/110-1102214_amanda-m-blank-profile-face-png.png"
+                                )
+                                if res.status_code == 200:
+                                    img = Image.open(io.BytesIO(res.content))
+                                    width, height = img.size
+                                    aspect_ratio = width / height
+                                    resized_img = img.resize((175, int(175 * aspect_ratio)))
+                                    st.image(resized_img)
+                                else:
+                                    st.error("Could not default image.")
 
-                        if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
-                            npc = session.query(NPC).filter(NPC.id == item.id).first()
-                            if npc:
-                                session.delete(npc)
-                                session.commit()
+                        with col2:
+                            st.write(f"Status: {item.status.upper()}")
+                            st.write(f"Description: {item.description}")
+
+                            if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
+                                st.session_state["edit_status"] = True
+                                st.session_state["npc_edit_id"] = item.id
                                 st.rerun()
+
+                            if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
+                                npc = session.query(NPC).filter(NPC.id == item.id).first()
+                                if npc:
+                                    session.delete(npc)
+                                    session.commit()
+                                    st.rerun()
             else:
                 for item in records:
                     if item.id == st.session_state["npc_edit_id"]:
@@ -101,6 +137,8 @@ try:
                             edit_npc_desc = (
                                 st.text_area("Description", value=item.description) or ""
                             )
+                            edit_npc_image_bytes = st.file_uploader("Upload Image")
+                            edit_npc_image_url = st.text_input("Image URL", value=item.image_url)
                             updated_name = edit_npc_name.strip()
                             updated_status = edit_npc_status.strip()
                             updated_description = edit_npc_desc.strip()
