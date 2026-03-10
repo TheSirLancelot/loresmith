@@ -54,7 +54,6 @@ try:
             if not st.session_state["location_edit_status"]:
                 for item in records:
                     with st.expander(f"{item.name}"):
-                        st.write(f"Status: {item.status.upper()}")
                         st.write(f"Description: {item.description}")
 
                         if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
@@ -119,7 +118,6 @@ try:
                                 st.rerun()
                     else:
                         with st.expander(f"{item.name}"):
-                            st.write(f"Status: {item.status.upper()}")
                             st.write(f"Description: {item.description}")
 
                             if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
