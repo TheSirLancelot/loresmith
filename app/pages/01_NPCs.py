@@ -131,7 +131,9 @@ try:
                             edit_npc_desc = (
                                 st.text_area("Description", value=item.description) or ""
                             )
-                            edit_npc_image_bytes = st.file_uploader("Upload Image")
+                            edit_npc_image_bytes = st.file_uploader(
+                                "Upload Image", key="update_image_upload"
+                            )
                             edit_npc_image_url = st.text_input("Image URL", value=item.image_url)
                             updated_name = edit_npc_name.strip()
                             updated_status = edit_npc_status.strip()
@@ -161,8 +163,10 @@ try:
                                         npc.description = updated_description
                                         if edit_npc_image_bytes:
                                             npc.image_bytes = edit_npc_image_bytes.getvalue()
+                                            npc.image_url = None
                                         elif edit_npc_image_url:
                                             npc.image_url = edit_npc_image_url
+                                            npc.image_bytes = None
                                         session.commit()
 
                                         st.session_state["edit_status"] = False
