@@ -90,7 +90,7 @@ try:
                                 resized_img = img.resize((int(175 * aspect_ratio), 175))
                                 st.image(resized_img)
                             elif item.image_url:
-                                res = requests.get(item.image_url)
+                                res = requests.get(item.image_url, timeout=5)
                                 if res.status_code == 200:
                                     img = Image.open(io.BytesIO(res.content))
                                     width, height = img.size
@@ -186,7 +186,7 @@ try:
                                     resized_img = img.resize((int(175 * aspect_ratio), 175))
                                     st.image(resized_img)
                                 elif item.image_url:
-                                    res = requests.get(item.image_url)
+                                    res = requests.get(item.image_url, timeout=5)
                                     if res.status_code == 200:
                                         img = Image.open(io.BytesIO(res.content))
                                         width, height = img.size
