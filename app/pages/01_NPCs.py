@@ -23,8 +23,8 @@ with st.form("new_npc_form", clear_on_submit=True):
     name_field = st.text_input("Name")
     status_field = st.text_input("Status")
     description_field = st.text_area("Description")
-    image_bytes_field = st.file_uploader("Upload Image")
-    image_url_field = st.text_input("Image URL")
+    image_bytes_field = st.file_uploader("Upload Image", key="new_image_upload")
+    image_url_field = st.text_input("Image URL", key="new_image_url")
     submit = st.form_submit_button("Create NPC")
 
     if submit:
