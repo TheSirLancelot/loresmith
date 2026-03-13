@@ -87,7 +87,7 @@ try:
                                 img = Image.open(io.BytesIO(item.image_bytes))
                                 width, height = img.size
                                 aspect_ratio = width / height
-                                resized_img = img.resize((175, int(175 * aspect_ratio)))
+                                resized_img = img.resize((int(175 * aspect_ratio), 175))
                                 st.image(resized_img)
                             elif item.image_url:
                                 res = requests.get(item.image_url)
@@ -95,7 +95,7 @@ try:
                                     img = Image.open(io.BytesIO(res.content))
                                     width, height = img.size
                                     aspect_ratio = width / height
-                                    resized_img = img.resize((175, int(175 * aspect_ratio)))
+                                    resized_img = img.resize((int(175 * aspect_ratio), 175))
                                     st.image(resized_img)
                                 else:
                                     st.error("Could not load image from URL.")
@@ -195,7 +195,7 @@ try:
                                     img = Image.open(io.BytesIO(item.image_bytes))
                                     width, height = img.size
                                     aspect_ratio = width / height
-                                    resized_img = img.resize((175, int(175 * aspect_ratio)))
+                                    resized_img = img.resize((int(175 * aspect_ratio), 175))
                                     st.image(resized_img)
                                 elif item.image_url:
                                     res = requests.get(item.image_url)
@@ -203,7 +203,7 @@ try:
                                         img = Image.open(io.BytesIO(res.content))
                                         width, height = img.size
                                         aspect_ratio = width / height
-                                        resized_img = img.resize((175, int(175 * aspect_ratio)))
+                                        resized_img = img.resize((int(175 * aspect_ratio), 175))
                                         st.image(resized_img)
                                     else:
                                         st.error("Could not load image from URL.")
