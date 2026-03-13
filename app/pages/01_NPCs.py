@@ -1,9 +1,12 @@
 import bootstrap  # noqa: F401
+import io
 import streamlit as st
 import logging
+import requests
 from app.components.layout import page_header
 from app.db.migrations import get_session
 from app.db.schema import NPC
+from PIL import Image
 from sqlalchemy import select
 
 page_header("NPCs", "Create, manage, and explore characters.")
@@ -20,12 +23,16 @@ with st.form("new_npc_form", clear_on_submit=True):
     name_field = st.text_input("Name")
     status_field = st.text_input("Status")
     description_field = st.text_area("Description")
+    image_bytes_field = st.file_uploader("Upload Image", key="new_image_upload")
+    image_url_field = st.text_input("Image URL", key="new_image_url")
     submit = st.form_submit_button("Create NPC")
 
     if submit:
         name = name_field.strip()
         status = status_field.strip()
         description = description_field.strip()
+        image_bytes = None
+        image_url = None
 
         # Check if name is empty
         if not name:
@@ -33,10 +40,24 @@ with st.form("new_npc_form", clear_on_submit=True):
         # Check if status is empty
         elif not status:
             st.error("Status cannot be empty.")
+        elif image_bytes_field and image_url_field:
+            st.error("Can only upload image or provide image URL, not both!")
         else:
             try:
                 with get_session() as session:
-                    session.add(NPC(name=name, status=status, description=description))
+                    if image_bytes_field:
+                        image_bytes = image_bytes_field.getvalue()
+                    elif image_url_field:
+                        image_url = image_url_field.strip()
+                    session.add(
+                        NPC(
+                            name=name,
+                            status=status,
+                            description=description,
+                            image_bytes=image_bytes,
+                            image_url=image_url,
+                        )
+                    )
                     session.commit()
 
                 st.success(f"{name} created!")
@@ -59,20 +80,47 @@ try:
             if not st.session_state["edit_status"]:
                 for item in records:
                     with st.expander(f"{item.name}"):
-                        st.write(f"Status: {item.status.upper()}")
-                        st.write(f"Description: {item.description}")
+                        col1, col2 = st.columns([1, 6])
 
-                        if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
-                            st.session_state["edit_status"] = True
-                            st.session_state["npc_edit_id"] = item.id
-                            st.rerun()
+                        with col1:
+                            if item.image_bytes:
+                                try:
+                                    img = Image.open(io.BytesIO(item.image_bytes))
+                                    width, height = img.size
+                                    aspect_ratio = width / height
+                                    resized_img = img.resize((int(175 * aspect_ratio), 175))
+                                    st.image(resized_img)
+                                except Exception as exc:
+                                    st.error("Unable to load profile image.")
+                                    logging.getLogger("connection").exception(exc)
+                            elif item.image_url:
+                                try:
+                                    res = requests.get(item.image_url, timeout=5)
+                                    if res.status_code == 200:
+                                        img = Image.open(io.BytesIO(res.content))
+                                        width, height = img.size
+                                        aspect_ratio = width / height
+                                        resized_img = img.resize((int(175 * aspect_ratio), 175))
+                                        st.image(resized_img)
+                                except Exception as exc:
+                                    st.error("Unable to load profile image.")
+                                    logging.getLogger("connection").exception(exc)
 
-                        if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
-                            npc = session.query(NPC).filter(NPC.id == item.id).first()
-                            if npc:
-                                session.delete(npc)
-                                session.commit()
+                        with col2:
+                            st.write(f"Status: {item.status.upper()}")
+                            st.write(f"Description: {item.description}")
+
+                            if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
+                                st.session_state["edit_status"] = True
+                                st.session_state["npc_edit_id"] = item.id
                                 st.rerun()
+
+                            if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
+                                npc = session.query(NPC).filter(NPC.id == item.id).first()
+                                if npc:
+                                    session.delete(npc)
+                                    session.commit()
+                                    st.rerun()
             else:
                 for item in records:
                     if item.id == st.session_state["npc_edit_id"]:
@@ -83,6 +131,10 @@ try:
                             edit_npc_desc = (
                                 st.text_area("Description", value=item.description) or ""
                             )
+                            edit_npc_image_bytes = st.file_uploader(
+                                "Upload Image", key="update_image_upload"
+                            )
+                            edit_npc_image_url = st.text_input("Image URL", value=item.image_url)
                             updated_name = edit_npc_name.strip()
                             updated_status = edit_npc_status.strip()
                             updated_description = edit_npc_desc.strip()
@@ -93,6 +145,10 @@ try:
                                 # Check if status is empty
                                 elif not updated_status:
                                     st.error("Status cannot be empty.")
+                                elif edit_npc_image_bytes and edit_npc_image_url:
+                                    st.error(
+                                        "Can only upload image or provide image URL, not both!"
+                                    )
                                 else:
                                     try:
                                         npc = session.query(NPC).filter(NPC.id == item.id).first()
@@ -105,6 +161,12 @@ try:
                                         npc.name = updated_name
                                         npc.status = updated_status
                                         npc.description = updated_description
+                                        if edit_npc_image_bytes:
+                                            npc.image_bytes = edit_npc_image_bytes.getvalue()
+                                            npc.image_url = None
+                                        elif edit_npc_image_url:
+                                            npc.image_url = edit_npc_image_url
+                                            npc.image_bytes = None
                                         session.commit()
 
                                         st.session_state["edit_status"] = False
@@ -124,20 +186,47 @@ try:
                                 st.rerun()
                     else:
                         with st.expander(f"{item.name}"):
-                            st.write(f"Status: {item.status.upper()}")
-                            st.write(f"Description: {item.description}")
+                            col1, col2 = st.columns([1, 6])
 
-                            if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
-                                st.session_state["edit_status"] = True
-                                st.session_state["npc_edit_id"] = item.id
-                                st.rerun()
+                            with col1:
+                                if item.image_bytes:
+                                    try:
+                                        img = Image.open(io.BytesIO(item.image_bytes))
+                                        width, height = img.size
+                                        aspect_ratio = width / height
+                                        resized_img = img.resize((int(175 * aspect_ratio), 175))
+                                        st.image(resized_img)
+                                    except Exception as exc:
+                                        st.error("Unable to load profile image.")
+                                        logging.getLogger("connection").exception(exc)
+                                elif item.image_url:
+                                    try:
+                                        res = requests.get(item.image_url, timeout=5)
+                                        if res.status_code == 200:
+                                            img = Image.open(io.BytesIO(res.content))
+                                            width, height = img.size
+                                            aspect_ratio = width / height
+                                            resized_img = img.resize((int(175 * aspect_ratio), 175))
+                                            st.image(resized_img)
+                                    except Exception as exc:
+                                        st.error("Unable to load profile image.")
+                                        logging.getLogger("connection").exception(exc)
 
-                            if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
-                                npc = session.query(NPC).filter(NPC.id == item.id).first()
-                                if npc:
-                                    session.delete(npc)
-                                    session.commit()
+                            with col2:
+                                st.write(f"Status: {item.status.upper()}")
+                                st.write(f"Description: {item.description}")
+
+                                if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
+                                    st.session_state["edit_status"] = True
+                                    st.session_state["npc_edit_id"] = item.id
                                     st.rerun()
+
+                                if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
+                                    npc = session.query(NPC).filter(NPC.id == item.id).first()
+                                    if npc:
+                                        session.delete(npc)
+                                        session.commit()
+                                        st.rerun()
 except Exception as exc:
     st.error(
         "Unable to connect to the database. "
