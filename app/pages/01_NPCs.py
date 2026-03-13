@@ -84,21 +84,27 @@ try:
 
                         with col1:
                             if item.image_bytes:
-                                img = Image.open(io.BytesIO(item.image_bytes))
-                                width, height = img.size
-                                aspect_ratio = width / height
-                                resized_img = img.resize((int(175 * aspect_ratio), 175))
-                                st.image(resized_img)
-                            elif item.image_url:
-                                res = requests.get(item.image_url, timeout=5)
-                                if res.status_code == 200:
-                                    img = Image.open(io.BytesIO(res.content))
+                                try:
+                                    img = Image.open(io.BytesIO(item.image_bytes))
                                     width, height = img.size
                                     aspect_ratio = width / height
                                     resized_img = img.resize((int(175 * aspect_ratio), 175))
                                     st.image(resized_img)
-                                else:
-                                    st.error("Could not load image from URL.")
+                                except Exception as exc:
+                                    st.error("Unable to load profile image.")
+                                    logging.getLogger("connection").exception(exc)
+                            elif item.image_url:
+                                try:
+                                    res = requests.get(item.image_url, timeout=5)
+                                    if res.status_code == 200:
+                                        img = Image.open(io.BytesIO(res.content))
+                                        width, height = img.size
+                                        aspect_ratio = width / height
+                                        resized_img = img.resize((int(175 * aspect_ratio), 175))
+                                        st.image(resized_img)
+                                except Exception as exc:
+                                    st.error("Unable to load profile image.")
+                                    logging.getLogger("connection").exception(exc)
 
                         with col2:
                             st.write(f"Status: {item.status.upper()}")
@@ -180,21 +186,27 @@ try:
 
                             with col1:
                                 if item.image_bytes:
-                                    img = Image.open(io.BytesIO(item.image_bytes))
-                                    width, height = img.size
-                                    aspect_ratio = width / height
-                                    resized_img = img.resize((int(175 * aspect_ratio), 175))
-                                    st.image(resized_img)
-                                elif item.image_url:
-                                    res = requests.get(item.image_url, timeout=5)
-                                    if res.status_code == 200:
-                                        img = Image.open(io.BytesIO(res.content))
+                                    try:
+                                        img = Image.open(io.BytesIO(item.image_bytes))
                                         width, height = img.size
                                         aspect_ratio = width / height
                                         resized_img = img.resize((int(175 * aspect_ratio), 175))
                                         st.image(resized_img)
-                                    else:
-                                        st.error("Could not load image from URL.")
+                                    except Exception as exc:
+                                        st.error("Unable to load profile image.")
+                                        logging.getLogger("connection").exception(exc)
+                                elif item.image_url:
+                                    try:
+                                        res = requests.get(item.image_url, timeout=5)
+                                        if res.status_code == 200:
+                                            img = Image.open(io.BytesIO(res.content))
+                                            width, height = img.size
+                                            aspect_ratio = width / height
+                                            resized_img = img.resize((int(175 * aspect_ratio), 175))
+                                            st.image(resized_img)
+                                    except Exception as exc:
+                                        st.error("Unable to load profile image.")
+                                        logging.getLogger("connection").exception(exc)
 
                             with col2:
                                 st.write(f"Status: {item.status.upper()}")
