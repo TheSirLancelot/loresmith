@@ -99,18 +99,6 @@ try:
                                     st.image(resized_img)
                                 else:
                                     st.error("Could not load image from URL.")
-                            else:
-                                res = requests.get(
-                                    "https://www.nicepng.com/png/full/110-1102214_amanda-m-blank-profile-face-png.png"
-                                )
-                                if res.status_code == 200:
-                                    img = Image.open(io.BytesIO(res.content))
-                                    width, height = img.size
-                                    aspect_ratio = width / height
-                                    resized_img = img.resize((175, int(175 * aspect_ratio)))
-                                    st.image(resized_img)
-                                else:
-                                    st.error("Could not default image.")
 
                         with col2:
                             st.write(f"Status: {item.status.upper()}")
@@ -207,18 +195,6 @@ try:
                                         st.image(resized_img)
                                     else:
                                         st.error("Could not load image from URL.")
-                                else:
-                                    res = requests.get(
-                                        "https://www.nicepng.com/png/full/110-1102214_amanda-m-blank-profile-face-png.png"
-                                    )
-                                    if res.status_code == 200:
-                                        img = Image.open(io.BytesIO(res.content))
-                                        width, height = img.size
-                                        aspect_ratio = width / height
-                                        resized_img = img.resize((175, int(175 * aspect_ratio)))
-                                        st.image(resized_img)
-                                    else:
-                                        st.error("Could not default image.")
 
                             with col2:
                                 st.write(f"Status: {item.status.upper()}")
