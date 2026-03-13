@@ -62,13 +62,21 @@ try:
                             st.rerun()
 
                         if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
-                            location = (
-                                session.query(Location).filter(Location.id == item.id).first()
-                            )
-                            if location:
-                                session.delete(location)
-                                session.commit()
-                                st.rerun()
+                            try:
+                                location = (
+                                    session.query(Location).filter(Location.id == item.id).first()
+                                )
+                                if location:
+                                    session.delete(location)
+                                    session.commit()
+                                    st.rerun()
+                            except Exception as exc:
+                                session.rollback()
+                                st.error(
+                                    "Unable to connect to the database. "
+                                    + "Please check your configuration or try again later."
+                                )
+                                logging.getLogger("connection").exception(exc)
             else:
                 for item in records:
                     if item.id == st.session_state["location_edit_id"]:
@@ -126,18 +134,29 @@ try:
                                 st.rerun()
 
                             if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
-                                location = (
-                                    session.query(Location).filter(Location.id == item.id).first()
-                                )
-                                if location:
-                                    session.delete(location)
-                                    session.commit()
-                                    st.rerun()
+                                try:
+                                    location = (
+                                        session.query(Location)
+                                        .filter(Location.id == item.id)
+                                        .first()
+                                    )
+                                    if location:
+                                        session.delete(location)
+                                        session.commit()
+                                        st.rerun()
+                                except Exception as exc:
+                                    session.rollback()
+                                    st.error(
+                                        "Unable to connect to the database. "
+                                        + "Please check your configuration or try again later."
+                                    )
+                                    logging.getLogger("connection").exception(exc)
 except Exception as exc:
     st.error(
         "Unable to connect to the database. "
-        + f"Please check your configuration or try again later. Error: {exc}"
+        + "Please check your configuration or try again later."
     )
+    logging.getLogger("connection").exception(exc)
 
 st.subheader("Planned Capabilities")
 
