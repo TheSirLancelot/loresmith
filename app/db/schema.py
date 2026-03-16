@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import UTC, datetime
 
+import streamlit as st
 from sqlalchemy import DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -50,3 +52,27 @@ class Location(IdMixin, TimestampMixin, Base):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+    def as_expander(self, session):
+        with st.expander(f"{self.name}"):
+            st.write(f"Description: {self.description}")
+
+            if st.button("Edit", key=f"edit_btn_{self.id}", type="secondary"):
+                st.session_state["location_edit_status"] = True
+                st.session_state["location_edit_id"] = self.id
+                st.rerun()
+
+            if st.button("Delete", key=f"del_btn_{self.id}", type="primary"):
+                try:
+                    location = session.query(Location).filter(Location.id == self.id).first()
+                    if location:
+                        session.delete(location)
+                        session.commit()
+                        st.rerun()
+                except Exception as exc:
+                    session.rollback()
+                    st.error(
+                        "Unable to connect to the database. "
+                        + "Please check your configuration or try again later."
+                    )
+                    logging.getLogger("connection").exception(exc)
