@@ -49,3 +49,4 @@ class Location(IdMixin, TimestampMixin, Base):
     __tablename__ = "location"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
