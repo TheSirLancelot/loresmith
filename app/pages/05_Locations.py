@@ -53,30 +53,7 @@ try:
         else:
             if not st.session_state["location_edit_status"]:
                 for item in records:
-                    with st.expander(f"{item.name}"):
-                        st.write(f"Description: {item.description}")
-
-                        if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
-                            st.session_state["location_edit_status"] = True
-                            st.session_state["location_edit_id"] = item.id
-                            st.rerun()
-
-                        if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
-                            try:
-                                location = (
-                                    session.query(Location).filter(Location.id == item.id).first()
-                                )
-                                if location:
-                                    session.delete(location)
-                                    session.commit()
-                                    st.rerun()
-                            except Exception as exc:
-                                session.rollback()
-                                st.error(
-                                    "Unable to connect to the database. "
-                                    + "Please check your configuration or try again later."
-                                )
-                                logging.getLogger("connection").exception(exc)
+                    item.as_expander(session)
             else:
                 for item in records:
                     if item.id == st.session_state["location_edit_id"]:
