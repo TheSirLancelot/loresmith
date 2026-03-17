@@ -64,10 +64,11 @@ class Location(IdMixin, TimestampMixin, Base):
 
             if st.button("Delete", key=f"del_btn_{self.id}", type="primary"):
                 try:
-                    location = session.query(Location).filter(Location.id == self.id).first()
+                    location = session.get(Location, self.id)
                     if location:
                         session.delete(location)
                         session.commit()
+                        del st.session_state[f"location_edit_{self.id}"]
                         st.rerun()
                 except Exception as exc:
                     session.rollback()
