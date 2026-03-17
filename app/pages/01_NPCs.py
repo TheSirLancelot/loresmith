@@ -11,8 +11,8 @@ from sqlalchemy import select
 
 page_header("NPCs", "Create, manage, and explore characters.")
 
-if "npc_edit_status" not in st.session_state:
-    st.session_state["npc_edit_status"] = False
+if "edit_status" not in st.session_state:
+    st.session_state["edit_status"] = False
 if "npc_edit_id" not in st.session_state:
     st.session_state["npc_edit_id"] = None
 
@@ -77,7 +77,7 @@ try:
         if not records:
             st.info("No NPCs found in the database.")
         else:
-            if not st.session_state["npc_edit_status"]:
+            if not st.session_state["edit_status"]:
                 for item in records:
                     with st.expander(f"{item.name}"):
                         col1, col2 = st.columns([1, 6])
@@ -154,7 +154,7 @@ try:
                                         npc = session.query(NPC).filter(NPC.id == item.id).first()
                                         if npc is None:
                                             st.error("This NPC no longer exists.")
-                                            st.session_state["npc_edit_status"] = False
+                                            st.session_state["edit_status"] = False
                                             st.session_state["npc_edit_id"] = None
                                             st.rerun()
 
@@ -169,7 +169,7 @@ try:
                                             npc.image_bytes = None
                                         session.commit()
 
-                                        st.session_state["npc_edit_status"] = False
+                                        st.session_state["edit_status"] = False
                                         st.session_state["npc_edit_id"] = None
 
                                         st.rerun()
@@ -181,7 +181,7 @@ try:
                                         )
                                         logging.getLogger("connection").exception(exc)
                             if st.button("Cancel", key="update_cancel_btn", type="secondary"):
-                                st.session_state["npc_edit_status"] = False
+                                st.session_state["edit_status"] = False
                                 st.session_state["npc_edit_id"] = None
                                 st.rerun()
                     else:
