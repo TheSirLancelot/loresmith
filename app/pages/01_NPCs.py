@@ -1,7 +1,11 @@
 import bootstrap  # noqa: F401
 import io
-import streamlit as st
+import ipaddress
 import logging
+import socket
+import streamlit as st
+from urllib.parse import urlparse
+
 import requests
 from app.components.layout import page_header
 from app.db.migrations import get_session
@@ -15,6 +19,63 @@ if "edit_status" not in st.session_state:
     st.session_state["edit_status"] = False
 if "npc_edit_id" not in st.session_state:
     st.session_state["npc_edit_id"] = None
+
+
+def _is_safe_public_image_url(url: str) -> bool:
+    """Validate that URL is safe to fetch: public scheme, public IP, no private networks."""
+    try:
+        parsed = urlparse(url.strip())
+        if parsed.scheme not in {"http", "https"}:
+            return False
+        if not parsed.hostname:
+            return False
+
+        # Resolve all A/AAAA records and reject any non-public target.
+        infos = socket.getaddrinfo(parsed.hostname, None)
+        for info in infos:
+            ip_str = info[4][0]
+            ip_obj = ipaddress.ip_address(ip_str)
+            if (
+                ip_obj.is_private
+                or ip_obj.is_loopback
+                or ip_obj.is_link_local
+                or ip_obj.is_multicast
+                or ip_obj.is_reserved
+            ):
+                return False
+
+        return True
+    except Exception:
+        return False
+
+
+def _fetch_image_bytes(url: str) -> bytes | None:
+    """Safely fetch image from URL with validation and limits."""
+    if not _is_safe_public_image_url(url):
+        return None
+
+    try:
+        res = requests.get(
+            url,
+            timeout=5,
+            allow_redirects=False,
+            headers={"User-Agent": "LoreSmith/1.0"},
+        )
+        if res.status_code != 200:
+            return None
+
+        content_type = res.headers.get("Content-Type", "").lower()
+        if not content_type.startswith("image/"):
+            return None
+
+        # 5 MB cap to avoid loading huge payloads.
+        if len(res.content) > 5 * 1024 * 1024:
+            return None
+
+        return res.content
+    except requests.RequestException:
+        return None
+
 
 with st.form("new_npc_form", clear_on_submit=True):
     st.subheader("Create New NPC")
@@ -95,9 +156,9 @@ try:
                                     logging.getLogger("connection").exception(exc)
                             elif item.image_url:
                                 try:
-                                    res = requests.get(item.image_url, timeout=5)
-                                    if res.status_code == 200:
-                                        img = Image.open(io.BytesIO(res.content))
+                                    img_bytes = _fetch_image_bytes(item.image_url)
+                                    if img_bytes:
+                                        img = Image.open(io.BytesIO(img_bytes))
                                         width, height = img.size
                                         aspect_ratio = width / height
                                         resized_img = img.resize((int(175 * aspect_ratio), 175))
@@ -201,9 +262,9 @@ try:
                                         logging.getLogger("connection").exception(exc)
                                 elif item.image_url:
                                     try:
-                                        res = requests.get(item.image_url, timeout=5)
-                                        if res.status_code == 200:
-                                            img = Image.open(io.BytesIO(res.content))
+                                        img_bytes = _fetch_image_bytes(item.image_url)
+                                        if img_bytes:
+                                            img = Image.open(io.BytesIO(img_bytes))
                                             width, height = img.size
                                             aspect_ratio = width / height
                                             resized_img = img.resize((int(175 * aspect_ratio), 175))
