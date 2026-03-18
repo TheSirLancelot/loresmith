@@ -14,24 +14,38 @@ class Base(DeclarativeBase):
     pass
 
 
-class NPC(Base):
-    """Non-player character entity for campaign management."""
-
-    __tablename__ = "npc"
-
+class IdMixin:
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+
+
+class TimestampMixin:
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=lambda: datetime.now(UTC)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
 
+
+class NPC(IdMixin, TimestampMixin, Base):
+    """Non-player character entity for campaign management."""
+
+    __tablename__ = "npc"
+
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+
     def __repr__(self) -> str:
         return f"<NPC(id={self.id!r}, name={self.name!r}, status={self.status!r})>"
+
+
+class Location(IdMixin, TimestampMixin, Base):
+    """Location entity for campaign management."""
+
+    __tablename__ = "location"
+
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
