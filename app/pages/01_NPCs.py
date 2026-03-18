@@ -93,7 +93,7 @@ with st.form("new_npc_form", clear_on_submit=True):
         status = status_field.strip()
         description = description_field.strip()
         image_bytes = None
-        image_url = None
+        image_url = image_url_field.strip() if image_url_field else ""
 
         # Check if name is empty
         if not name:
@@ -101,15 +101,15 @@ with st.form("new_npc_form", clear_on_submit=True):
         # Check if status is empty
         elif not status:
             st.error("Status cannot be empty.")
-        elif image_bytes_field and image_url_field:
+        elif image_bytes_field and image_url:
             st.error("Can only upload image or provide image URL, not both!")
         else:
             try:
                 with get_session() as session:
                     if image_bytes_field:
                         image_bytes = image_bytes_field.getvalue()
-                    elif image_url_field:
-                        image_url = image_url_field.strip()
+                    elif image_url:
+                        pass  # image_url already normalized above
                     session.add(
                         NPC(
                             name=name,
@@ -199,6 +199,9 @@ try:
                             updated_name = edit_npc_name.strip()
                             updated_status = edit_npc_status.strip()
                             updated_description = edit_npc_desc.strip()
+                            updated_image_url = (
+                                edit_npc_image_url.strip() if edit_npc_image_url else ""
+                            )
 
                             if st.button("Update", key=f"update_btn_{item.id}", type="secondary"):
                                 if not updated_name:
@@ -206,7 +209,7 @@ try:
                                 # Check if status is empty
                                 elif not updated_status:
                                     st.error("Status cannot be empty.")
-                                elif edit_npc_image_bytes and edit_npc_image_url:
+                                elif edit_npc_image_bytes and updated_image_url:
                                     st.error(
                                         "Can only upload image or provide image URL, not both!"
                                     )
@@ -225,8 +228,11 @@ try:
                                         if edit_npc_image_bytes:
                                             npc.image_bytes = edit_npc_image_bytes.getvalue()
                                             npc.image_url = None
-                                        elif edit_npc_image_url:
-                                            npc.image_url = edit_npc_image_url
+                                        elif updated_image_url:
+                                            npc.image_url = updated_image_url
+                                            npc.image_bytes = None
+                                        else:
+                                            npc.image_url = None
                                             npc.image_bytes = None
                                         session.commit()
 
