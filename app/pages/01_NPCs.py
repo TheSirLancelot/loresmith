@@ -49,6 +49,23 @@ def _is_safe_public_image_url(url: str) -> bool:
         return False
 
 
+def _validate_uploaded_image(uploaded_file) -> bytes | None:
+    """Validate and extract bytes from uploaded file. Enforces 2 MB size limit."""
+    if uploaded_file is None:
+        return None
+
+    MAX_SIZE_MB = 2
+    MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024
+
+    try:
+        file_bytes = uploaded_file.getvalue()
+        if len(file_bytes) > MAX_SIZE_BYTES:
+            return None
+        return file_bytes
+    except Exception:
+        return None
+
+
 def _fetch_image_bytes(url: str) -> bytes | None:
     """Safely fetch image from URL with validation and limits."""
     if not _is_safe_public_image_url(url):
@@ -84,7 +101,11 @@ with st.form("new_npc_form", clear_on_submit=True):
     name_field = st.text_input("Name")
     status_field = st.text_input("Status")
     description_field = st.text_area("Description")
-    image_bytes_field = st.file_uploader("Upload Image", key="new_image_upload")
+    image_bytes_field = st.file_uploader(
+        "Upload Image",
+        key="new_image_upload",
+        type=["jpg", "jpeg", "png", "gif", "webp"],
+    )
     image_url_field = st.text_input("Image URL", key="new_image_url")
     submit = st.form_submit_button("Create NPC")
 
@@ -106,10 +127,16 @@ with st.form("new_npc_form", clear_on_submit=True):
         else:
             try:
                 with get_session() as session:
+                    image_bytes = None
                     if image_bytes_field:
-                        image_bytes = image_bytes_field.getvalue()
-                    elif image_url:
-                        pass  # image_url already normalized above
+                        image_bytes = _validate_uploaded_image(image_bytes_field)
+                        if image_bytes is None:
+                            st.error(
+                                "Image file too large. Maximum size is 2 MB. "
+                                "Please upload a smaller image."
+                            )
+                            raise ValueError("Image validation failed")
+
                     session.add(
                         NPC(
                             name=name,
@@ -122,6 +149,8 @@ with st.form("new_npc_form", clear_on_submit=True):
                     session.commit()
 
                 st.success(f"{name} created!")
+            except ValueError:
+                pass  # Error message already shown
             except Exception as exc:
                 st.error(
                     "Unable to connect to the database. "
@@ -193,7 +222,9 @@ try:
                                 st.text_area("Description", value=item.description) or ""
                             )
                             edit_npc_image_bytes = st.file_uploader(
-                                "Upload Image", key="update_image_upload"
+                                "Upload Image",
+                                key="update_image_upload",
+                                type=["jpg", "jpeg", "png", "gif", "webp"],
                             )
                             edit_npc_image_url = st.text_input("Image URL", value=item.image_url)
                             updated_name = edit_npc_name.strip()
@@ -226,20 +257,35 @@ try:
                                         npc.status = updated_status
                                         npc.description = updated_description
                                         if edit_npc_image_bytes:
-                                            npc.image_bytes = edit_npc_image_bytes.getvalue()
-                                            npc.image_url = None
+                                            validated_bytes = _validate_uploaded_image(
+                                                edit_npc_image_bytes
+                                            )
+                                            if validated_bytes is None:
+                                                st.error(
+                                                    "Image file too large. Maximum size is 2 MB. "
+                                                    "Please upload a smaller image."
+                                                )
+                                            else:
+                                                npc.image_bytes = validated_bytes
+                                                npc.image_url = None
+                                                session.commit()
+                                                st.session_state["edit_status"] = False
+                                                st.session_state["npc_edit_id"] = None
+                                                st.rerun()
                                         elif updated_image_url:
                                             npc.image_url = updated_image_url
                                             npc.image_bytes = None
+                                            session.commit()
+                                            st.session_state["edit_status"] = False
+                                            st.session_state["npc_edit_id"] = None
+                                            st.rerun()
                                         else:
                                             npc.image_url = None
                                             npc.image_bytes = None
-                                        session.commit()
-
-                                        st.session_state["edit_status"] = False
-                                        st.session_state["npc_edit_id"] = None
-
-                                        st.rerun()
+                                            session.commit()
+                                            st.session_state["edit_status"] = False
+                                            st.session_state["npc_edit_id"] = None
+                                            st.rerun()
                                     except Exception as exc:
                                         session.rollback()
                                         st.error(
