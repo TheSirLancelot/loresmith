@@ -53,6 +53,7 @@ class Location(IdMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
+    # Return as expander object
     @st.fragment
     def as_expander(self, session):
         with st.expander(f"{self.name}"):
