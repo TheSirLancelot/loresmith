@@ -6,7 +6,7 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import CheckConstraint, DateTime, LargeBinary, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -25,6 +25,7 @@ class NPC(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
     image_bytes: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    stats: Mapped[dict] = mapped_column(JSONB, default=lambda: {})
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=lambda: datetime.now(UTC)
     )
