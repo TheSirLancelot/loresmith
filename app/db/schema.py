@@ -6,14 +6,9 @@ import logging
 import uuid
 from datetime import UTC, datetime
 
-<<<<<<< HEAD
-from sqlalchemy import CheckConstraint, DateTime, LargeBinary, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
-=======
 import streamlit as st
-from sqlalchemy import DateTime, String, Text
-from sqlalchemy.dialects.postgresql import UUID
->>>>>>> origin
+from sqlalchemy import DateTime, LargeBinary, String, Text
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -23,18 +18,15 @@ class Base(DeclarativeBase):
 
 class IdMixin:
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-<<<<<<< HEAD
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
     image_bytes: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     stats: Mapped[dict] = mapped_column(JSONB, default=lambda: {})
-=======
 
 
 class TimestampMixin:
->>>>>>> origin
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
@@ -54,6 +46,7 @@ class NPC(IdMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    stats: Mapped[dict] = mapped_column(JSONB, default=lambda: {})
 
     def __repr__(self) -> str:
         return f"<NPC(id={self.id!r}, name={self.name!r}, status={self.status!r})>"
