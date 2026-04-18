@@ -288,12 +288,17 @@ try:
                                         npc.name = updated_name
                                         npc.status = updated_status
                                         npc.description = updated_description
-                                        npc.stats = dict(
-                                            zip(
-                                                edit_npc_stats_keys.split(","),
-                                                edit_npc_stats_values.split(","),
-                                                strict=True,
-                                            )
+                                        npc.stats = (
+                                            {
+                                                str(k): float(v)
+                                                for k, v in zip(
+                                                    edit_npc_stats_keys.split(","),
+                                                    edit_npc_stats_values.split(","),
+                                                    strict=True,
+                                                )
+                                            }
+                                            if edit_npc_stats_keys and edit_npc_stats_values
+                                            else {}
                                         )
                                         if edit_npc_image_bytes:
                                             validated_bytes = _validate_uploaded_image(
