@@ -255,8 +255,12 @@ try:
                                 edit_npc_image_url.strip() if edit_npc_image_url else ""
                             )
 
-                            if len(edit_npc_stats_keys) != len(edit_npc_stats_values):
-                                st.error("Stats keys and values count must match.")
+                            if len(edit_npc_stats_keys.split(",")) != len(
+                                edit_npc_stats_values.split(",")
+                            ):
+                                st.error(
+                                    f"Stats keys and values count must match. Keys: {len(edit_npc_stats_keys.split(','))}, Values: {len(edit_npc_stats_values.split(','))}"
+                                )
 
                             if st.button("Update", key=f"update_btn_{item.id}", type="secondary"):
                                 if not updated_name:
@@ -268,7 +272,9 @@ try:
                                     st.error(
                                         "Can only upload image or provide image URL, not both!"
                                     )
-                                elif len(edit_npc_stats_keys) != len(edit_npc_stats_values):
+                                elif len(edit_npc_stats_keys.split(",")) != len(
+                                    edit_npc_stats_values.split(",")
+                                ):
                                     st.error("Stats keys and values count must match.")
                                 else:
                                     try:
