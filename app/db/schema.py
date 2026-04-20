@@ -23,7 +23,6 @@ class IdMixin:
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
     image_bytes: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    stats: Mapped[dict] = mapped_column(JSONB, default=lambda: {})
 
 
 class TimestampMixin:
