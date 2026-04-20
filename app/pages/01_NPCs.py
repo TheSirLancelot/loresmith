@@ -119,7 +119,8 @@ with st.form("new_npc_form", clear_on_submit=True):
         image_url = image_url_field.strip() if image_url_field else ""
         stats = (
             dict(zip(stats_keys_field.split(","), stats_values_field.split(","), strict=True))
-            if stats_keys_field and stats_values_field
+            if (stats_keys_field and stats_values_field)
+            and (len(stats_keys_field.split(",")) == len(stats_values_field.split(",")))
             else {}
         )
 
@@ -290,7 +291,7 @@ try:
                                         npc.description = updated_description
                                         npc.stats = (
                                             {
-                                                str(k): float(v)
+                                                k: v
                                                 for k, v in zip(
                                                     edit_npc_stats_keys.split(","),
                                                     edit_npc_stats_values.split(","),
