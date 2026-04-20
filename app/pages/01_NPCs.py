@@ -117,8 +117,12 @@ with st.form("new_npc_form", clear_on_submit=True):
         description = description_field.strip()
         image_bytes = None
         image_url = image_url_field.strip() if image_url_field else ""
-        stats = (
-            dict(zip(stats_keys_field.split(","), stats_values_field.split(","), strict=True))
+        stats = dict(
+            zip(
+                [key.strip() for key in stats_keys_field.split(",") if key.strip()],
+                [value.strip() for value in stats_values_field.split(",") if value.strip()],
+                strict=True,
+            )
             if (stats_keys_field and stats_values_field)
             and (len(stats_keys_field.split(",")) == len(stats_values_field.split(",")))
             else {}
