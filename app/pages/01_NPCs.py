@@ -175,7 +175,17 @@ st.divider()
 
 try:
     with get_session() as session:
-        records = session.execute(select(NPC).order_by(NPC.name)).scalars().all()
+        sort_choices = ["Name (A-Z)", "Name (Z-A)", "Status (A-Z)", "Status (Z-A)"]
+        sort_selection = st.selectbox("Sort NPCs by", options=sort_choices)
+
+        if sort_selection == "Name (A-Z)":
+            records = session.execute(select(NPC).order_by(NPC.name)).scalars().all()
+        elif sort_selection == "Name (Z-A)":
+            records = session.execute(select(NPC).order_by(NPC.name.desc())).scalars().all()
+        elif sort_selection == "Status (A-Z)":
+            records = session.execute(select(NPC).order_by(NPC.status)).scalars().all()
+        elif sort_selection == "Status (Z-A)":
+            records = session.execute(select(NPC).order_by(NPC.status.desc())).scalars().all()
 
         if not records:
             st.info("No NPCs found in the database.")
