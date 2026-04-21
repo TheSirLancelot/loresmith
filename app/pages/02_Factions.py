@@ -16,7 +16,7 @@ if "faction_edit_id" not in st.session_state:
 
 with st.form("new_faction_form", clear_on_submit=True):
     st.subheader("Create New Faction")
-    st.write("Name and description are required.")
+    st.write("Name is required. Description is optional.")
 
     name_field = st.text_input("Name")
     description_field = st.text_area("Description")
@@ -65,11 +65,9 @@ try:
                             st.rerun()
 
                         if st.button("Delete", key=f"del_btn_{item.id}", type="primary"):
-                            faction = session.query(Faction).filter(Faction.id == item.id).first()
-                            if faction:
-                                session.delete(faction)
-                                session.commit()
-                                st.rerun()
+                            session.delete(item)
+                            session.commit()
+                            st.rerun()
             else:
                 for item in records:
                     if item.id == st.session_state["faction_edit_id"]:
@@ -135,9 +133,9 @@ try:
                                     st.rerun()
 except Exception as exc:
     st.error(
-        "Unable to connect to the database. "
-        + f"Please check your configuration or try again later. Error: {exc}"
+        "Unable to connect to the database. Please check your configuration or try again later."
     )
+    logging.getLogger("connection").exception(exc)
 
 st.markdown(
     """

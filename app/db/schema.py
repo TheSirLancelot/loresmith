@@ -142,7 +142,7 @@ class Faction(IdMixin, TimestampMixin, Base):
                     if faction:
                         session.delete(faction)
                         session.commit()
-                        del st.session_state[f"faction_edit_{self.id}"]
+                        st.session_state.pop(f"faction_edit_{self.id}", None)
                         st.rerun()
                 except Exception as exc:
                     session.rollback()
@@ -159,7 +159,7 @@ class Faction(IdMixin, TimestampMixin, Base):
             edit_faction_desc = st.text_area("Description", value=self.description)
 
             if st.button("Update", key=f"update_faction_btn_{self.id}", type="secondary"):
-                if not edit_faction_name:
+                if not edit_faction_name.strip():
                     st.error("Name cannot be empty.")
                 else:
                     try:
