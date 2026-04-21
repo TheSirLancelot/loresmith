@@ -7,7 +7,7 @@ import uuid
 from datetime import UTC, datetime
 
 import streamlit as st
-from sqlalchemy import DateTime, String, Text
+from sqlalchemy import DateTime, LargeBinary, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -40,6 +40,8 @@ class NPC(IdMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    image_bytes: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
+    image_url: Mapped[str] = mapped_column(String(255), nullable=True)
 
     def __repr__(self) -> str:
         return f"<NPC(id={self.id!r}, name={self.name!r}, status={self.status!r})>"
