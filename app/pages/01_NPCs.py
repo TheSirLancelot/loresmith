@@ -178,14 +178,22 @@ try:
         sort_choices = ["Name (A-Z)", "Name (Z-A)", "Status (A-Z)", "Status (Z-A)"]
         sort_selection = st.selectbox("Sort NPCs by", options=sort_choices)
 
-        if sort_selection == "Name (A-Z)":
-            records = session.execute(select(NPC).order_by(NPC.name)).scalars().all()
-        elif sort_selection == "Name (Z-A)":
-            records = session.execute(select(NPC).order_by(NPC.name.desc())).scalars().all()
-        elif sort_selection == "Status (A-Z)":
-            records = session.execute(select(NPC).order_by(NPC.status)).scalars().all()
-        elif sort_selection == "Status (Z-A)":
-            records = session.execute(select(NPC).order_by(NPC.status.desc())).scalars().all()
+        sort_order_map = {
+            "Name (A-Z)": NPC.name.asc(),
+            "Name (Z-A)": NPC.name.desc(),
+            "Status (A-Z)": NPC.status.asc(),
+            "Status (Z-A)": NPC.status.desc(),
+        }
+        order_by_clause = sort_order_map[sort_selection]
+
+        if sort_selection == "Status (Z-A)":
+            records = (
+                session.execute(select(NPC).order_by(order_by_clause, NPC.name.asc()))
+                .scalars()
+                .all()
+            )
+        else:
+            records = session.execute(select(NPC).order_by(order_by_clause)).scalars().all()
 
         if not records:
             st.info("No NPCs found in the database.")
