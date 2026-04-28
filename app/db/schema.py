@@ -40,8 +40,8 @@ class NPC(IdMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
-    image_bytes: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
-    image_url: Mapped[str] = mapped_column(String(255), nullable=True)
+    image_bytes: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     def __repr__(self) -> str:
         return f"<NPC(id={self.id!r}, name={self.name!r}, status={self.status!r})>"
@@ -168,6 +168,7 @@ class Faction(IdMixin, TimestampMixin, Base):
                             st.error("This faction no longer exists.")
                             del st.session_state[f"faction_edit_{self.id}"]
                             st.rerun()
+                            return
 
                         faction.name = edit_faction_name.strip()
                         faction.description = edit_faction_desc.strip()
