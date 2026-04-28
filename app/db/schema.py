@@ -7,9 +7,9 @@ import uuid
 from datetime import UTC, datetime
 
 import streamlit as st
-from sqlalchemy import DateTime, LargeBinary, String, Text
+from sqlalchemy import DateTime, ForeignKey, LargeBinary, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -45,6 +45,10 @@ class NPC(IdMixin, TimestampMixin, Base):
     image_bytes: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     stats: Mapped[dict] = mapped_column(JSONB, default=lambda: {})
+    faction_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("faction.id", ondelete="SET NULL"), nullable=True
+    )
+    faction: Mapped[Faction | None] = relationship("Faction", back_populates="npcs")
 
     def __repr__(self) -> str:
         return f"<NPC(id={self.id!r}, name={self.name!r}, status={self.status!r})>"
@@ -126,6 +130,7 @@ class Faction(IdMixin, TimestampMixin, Base):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    npcs: Mapped[list[NPC]] = relationship("NPC", back_populates="faction", cascade="save-update")
 
     def __repr__(self) -> str:
         return f"<Faction(id={self.id!r}, name={self.name!r})>"
