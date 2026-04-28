@@ -22,8 +22,6 @@ class IdMixin:
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
-    image_bytes: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
-    image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
 
 class TimestampMixin:
