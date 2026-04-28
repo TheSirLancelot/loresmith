@@ -107,6 +107,8 @@ with st.form("new_npc_form", clear_on_submit=True):
         type=["jpg", "jpeg", "png", "gif", "webp"],
     )
     image_url_field = st.text_input("Image URL", key="new_image_url")
+    stats_keys_field = st.text_input("Stats Keys (comma-separated)", key="new_stats_keys")
+    stats_values_field = st.text_input("Stats Values (comma-separated)", key="new_stats_values")
     submit = st.form_submit_button("Create NPC")
 
     if submit:
@@ -115,6 +117,16 @@ with st.form("new_npc_form", clear_on_submit=True):
         description = description_field.strip()
         image_bytes = None
         image_url = image_url_field.strip() if image_url_field else ""
+        stats = dict(
+            zip(
+                [key.strip() for key in stats_keys_field.split(",") if key.strip()],
+                [value.strip() for value in stats_values_field.split(",") if value.strip()],
+                strict=True,
+            )
+            if (stats_keys_field and stats_values_field)
+            and (len(stats_keys_field.split(",")) == len(stats_values_field.split(",")))
+            else {}
+        )
 
         # Check if name is empty
         if not name:
@@ -144,6 +156,7 @@ with st.form("new_npc_form", clear_on_submit=True):
                             description=description,
                             image_bytes=image_bytes,
                             image_url=image_url,
+                            stats=stats,
                         )
                     )
                     session.commit()
@@ -162,7 +175,25 @@ st.divider()
 
 try:
     with get_session() as session:
-        records = session.execute(select(NPC).order_by(NPC.name)).scalars().all()
+        sort_choices = ["Name (A-Z)", "Name (Z-A)", "Status (A-Z)", "Status (Z-A)"]
+        sort_selection = st.selectbox("Sort NPCs by", options=sort_choices)
+
+        sort_order_map = {
+            "Name (A-Z)": NPC.name.asc(),
+            "Name (Z-A)": NPC.name.desc(),
+            "Status (A-Z)": NPC.status.asc(),
+            "Status (Z-A)": NPC.status.desc(),
+        }
+        order_by_clause = sort_order_map[sort_selection]
+
+        if sort_selection == "Status (Z-A)":
+            records = (
+                session.execute(select(NPC).order_by(order_by_clause, NPC.name.asc()))
+                .scalars()
+                .all()
+            )
+        else:
+            records = session.execute(select(NPC).order_by(order_by_clause)).scalars().all()
 
         if not records:
             st.info("No NPCs found in the database.")
@@ -199,6 +230,7 @@ try:
                         with col2:
                             st.write(f"Status: {item.status.upper()}")
                             st.write(f"Description: {item.description}")
+                            st.write(f"Stats: {item.stats if item.stats else 'N/A'}")
 
                             if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
                                 st.session_state["edit_status"] = True
@@ -227,12 +259,31 @@ try:
                                 type=["jpg", "jpeg", "png", "gif", "webp"],
                             )
                             edit_npc_image_url = st.text_input("Image URL", value=item.image_url)
+
+                            stat_keys = list(item.stats.keys()) if item.stats else []
+                            edit_npc_stats_keys = st.text_input(
+                                "Stats Keys (comma-separated)", value=", ".join(stat_keys)
+                            )
+
+                            value_keys = list(item.stats.values()) if item.stats else []
+                            edit_npc_stats_values = st.text_input(
+                                "Stats Values (comma-separated)",
+                                value=", ".join(map(str, value_keys)),
+                            )
+
                             updated_name = edit_npc_name.strip()
                             updated_status = edit_npc_status.strip()
                             updated_description = edit_npc_desc.strip()
                             updated_image_url = (
                                 edit_npc_image_url.strip() if edit_npc_image_url else ""
                             )
+
+                            if len(edit_npc_stats_keys.split(",")) != len(
+                                edit_npc_stats_values.split(",")
+                            ):
+                                st.error(
+                                    f"Stats keys and values count must match. Keys: {len(edit_npc_stats_keys.split(','))}, Values: {len(edit_npc_stats_values.split(','))}"
+                                )
 
                             if st.button("Update", key=f"update_btn_{item.id}", type="secondary"):
                                 if not updated_name:
@@ -244,6 +295,10 @@ try:
                                     st.error(
                                         "Can only upload image or provide image URL, not both!"
                                     )
+                                elif len(edit_npc_stats_keys.split(",")) != len(
+                                    edit_npc_stats_values.split(",")
+                                ):
+                                    st.error("Stats keys and values count must match.")
                                 else:
                                     try:
                                         npc = session.query(NPC).filter(NPC.id == item.id).first()
@@ -256,6 +311,18 @@ try:
                                         npc.name = updated_name
                                         npc.status = updated_status
                                         npc.description = updated_description
+                                        npc.stats = (
+                                            {
+                                                k: v
+                                                for k, v in zip(
+                                                    edit_npc_stats_keys.split(","),
+                                                    edit_npc_stats_values.split(","),
+                                                    strict=True,
+                                                )
+                                            }
+                                            if edit_npc_stats_keys and edit_npc_stats_values
+                                            else {}
+                                        )
                                         if edit_npc_image_bytes:
                                             validated_bytes = _validate_uploaded_image(
                                                 edit_npc_image_bytes
