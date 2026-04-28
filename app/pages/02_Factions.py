@@ -145,5 +145,3 @@ st.markdown(
 - Track influence levels
 """
 )
-
-st.warning("Database integration not yet connected.")
