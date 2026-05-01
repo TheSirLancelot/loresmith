@@ -7,13 +7,31 @@ import uuid
 from datetime import UTC, date, datetime
 
 import streamlit as st
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, LargeBinary, String, Text
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Table, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
     pass
+
+
+session_npc = Table(
+    "session_npc",
+    Base.metadata,
+    Column(
+        "session_id",
+        UUID(as_uuid=True),
+        ForeignKey("session_log.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "npc_id",
+        UUID(as_uuid=True),
+        ForeignKey("npc.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
 
 
 class IdMixin:
@@ -49,6 +67,9 @@ class NPC(IdMixin, TimestampMixin, Base):
         ForeignKey("faction.id", ondelete="SET NULL"), nullable=True
     )
     faction: Mapped[Faction | None] = relationship("Faction", back_populates="npcs")
+    sessions: Mapped[list[SessionLog]] = relationship(
+        "SessionLog", secondary="session_npc", back_populates="npcs"
+    )
 
     def __repr__(self) -> str:
         return f"<NPC(id={self.id!r}, name={self.name!r}, status={self.status!r})>"
@@ -213,6 +234,9 @@ class SessionLog(TimestampMixin, Base):
     xp_awarded: Mapped[int | None] = mapped_column(Integer, nullable=True)
     loot_awarded: Mapped[str | None] = mapped_column(Text, nullable=True)
     duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    npcs: Mapped[list[NPC]] = relationship(
+        "NPC", secondary="session_npc", back_populates="sessions"
+    )
 
     def __repr__(self) -> str:
         return (

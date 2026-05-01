@@ -218,7 +218,7 @@ try:
         }
         order_by_clause = sort_order_map[sort_selection]
 
-        base_query = select(NPC).options(joinedload(NPC.faction))
+        base_query = select(NPC).options(joinedload(NPC.faction), joinedload(NPC.sessions))
         if faction_filter is not None:
             base_query = base_query.where(NPC.faction_id == faction_filter.id)
 
@@ -226,10 +226,16 @@ try:
             records = (
                 session.execute(base_query.order_by(order_by_clause, NPC.name.asc()))
                 .scalars()
+                .unique()
                 .all()
             )
         else:
-            records = session.execute(base_query.order_by(order_by_clause)).scalars().all()
+            records = (
+                session.execute(base_query.order_by(order_by_clause))
+                .scalars()
+                .unique()
+                .all()
+            )
 
         if not records:
             st.info("No NPCs found in the database.")
@@ -269,6 +275,12 @@ try:
                             faction_name = item.faction.name if item.faction else "N/A"
                             st.write(f"Faction: {faction_name}")
                             st.write(f"Stats: {item.stats if item.stats else 'N/A'}")
+                            session_titles = (
+                                ", ".join(s.title for s in item.sessions)
+                                if item.sessions
+                                else "None"
+                            )
+                            st.write(f"Sessions: {session_titles}")
 
                             if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
                                 st.session_state["edit_status"] = True
@@ -459,6 +471,12 @@ try:
                             with col2:
                                 st.write(f"Status: {item.status.upper()}")
                                 st.write(f"Description: {item.description}")
+                                session_titles = (
+                                    ", ".join(s.title for s in item.sessions)
+                                    if item.sessions
+                                    else "None"
+                                )
+                                st.write(f"Sessions: {session_titles}")
 
                                 if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
                                     st.session_state["edit_status"] = True
