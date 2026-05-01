@@ -231,7 +231,10 @@ try:
             )
         else:
             records = (
-                session.execute(base_query.order_by(order_by_clause)).scalars().unique().all()
+                session.execute(base_query.order_by(order_by_clause))
+                .scalars()
+                .unique()
+                .all()
             )
 
         if not records:

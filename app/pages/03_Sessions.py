@@ -63,10 +63,12 @@ with st.form("new_session_form", clear_on_submit=True):
                         loot_awarded=loot_field.strip() or None,
                         duration_minutes=duration_field if duration_field is not None else None,
                     )
-                    for npc_id in selected_npc_ids:
-                        npc = session.get(NPC, npc_id)
-                        if npc:
-                            new_log.npcs.append(npc)
+                    if selected_npc_ids:
+                        new_log.npcs = (
+                            session.execute(select(NPC).where(NPC.id.in_(selected_npc_ids)))
+                            .scalars()
+                            .all()
+                        )
                     session.add(new_log)
                     session.commit()
 
