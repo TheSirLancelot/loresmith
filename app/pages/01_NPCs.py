@@ -100,21 +100,25 @@ with st.form("new_npc_form", clear_on_submit=True):
 
     try:
         with get_session() as session:
-            factions = session.execute(select(Faction)).scalars().all()
+            factions = list(session.execute(select(Faction)).scalars().all())
             factions = [None] + factions  # Allow empty selection
             # faction_names = [faction.name for faction in factions if faction]
-    except Exception as exc:
+    except Exception:
         factions = [None]
+        logging.exception("Failed to load factions from the database.")
         st.error(
             "Unable to connect to the database. "
-            + f"Please check your configuration or try again later. Error: {exc}"
+            + "Please check your configuration or try again later."
         )
 
     name_field = st.text_input("Name")
     status_field = st.text_input("Status")
     description_field = st.text_area("Description (optional)")
     faction_field = st.selectbox(
-        "Faction (optional)", options=factions, format_func=lambda f: f.name if f else "None"
+        "Faction (optional)",
+        options=factions,
+        format_func=lambda f: f.name if f else "None",
+        key="create_faction_selection",
     )
     image_bytes_field = st.file_uploader(
         "Upload Image",
@@ -130,8 +134,8 @@ with st.form("new_npc_form", clear_on_submit=True):
         name = name_field.strip()
         status = status_field.strip()
         description = description_field.strip()
+        faction_field = st.session_state.get("create_faction_selection")
         faction_id = faction_field.id if faction_field else None
-        factopm = faction_field if faction_field else None
         image_bytes = None
         image_url = image_url_field.strip() if image_url_field else ""
         stats = dict(
@@ -171,6 +175,7 @@ with st.form("new_npc_form", clear_on_submit=True):
                             name=name,
                             status=status,
                             description=description,
+                            faction_id=faction_id,
                             image_bytes=image_bytes,
                             image_url=image_url,
                             stats=stats,
@@ -247,7 +252,8 @@ try:
                         with col2:
                             st.write(f"Status: {item.status.upper()}")
                             st.write(f"Description: {item.description}")
-                            st.write(f"Faction: {item.faction.name if item.faction else 'N/A'}")
+                            faction_name = item.faction.name if item.faction else "N/A"
+                            st.write(f"Faction: {faction_name}")
                             st.write(f"Stats: {item.stats if item.stats else 'N/A'}")
 
                             if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
@@ -268,7 +274,9 @@ try:
                             # This doubly protects us from None values
                             edit_npc_name = st.text_input("Name", value=item.name) or ""
                             edit_npc_status = st.text_input("Status", value=item.status) or ""
-                            edit_npc_desc = ()
+                            edit_npc_desc = (
+                                st.text_area("Description", value=item.description) or ""
+                            )
                             current_faction_index = next(
                                 (
                                     index
@@ -282,6 +290,7 @@ try:
                                 options=factions,
                                 index=current_faction_index,
                                 format_func=lambda f: f.name if f else "None",
+                                key="edit_faction_selection",
                             )
                             edit_npc_image_bytes = st.file_uploader(
                                 "Upload Image",
@@ -304,8 +313,8 @@ try:
                             updated_name = edit_npc_name.strip()
                             updated_status = edit_npc_status.strip()
                             updated_description = edit_npc_desc.strip()
+                            edit_npc_faction = st.session_state.get("edit_faction_selection")
                             updated_faction_id = edit_npc_faction.id if edit_npc_faction else None
-                            updated_faction = edit_npc_faction if edit_npc_faction else None
                             updated_image_url = (
                                 edit_npc_image_url.strip() if edit_npc_image_url else ""
                             )
@@ -314,7 +323,9 @@ try:
                                 edit_npc_stats_values.split(",")
                             ):
                                 st.error(
-                                    f"Stats keys and values count must match. Keys: {len(edit_npc_stats_keys.split(','))}, Values: {len(edit_npc_stats_values.split(','))}"
+                                    f"Stats keys and values count must match. Keys: \
+                                    {len(edit_npc_stats_keys.split(','))}, \
+                                    Values: {len(edit_npc_stats_values.split(','))}"
                                 )
 
                             if st.button("Update", key=f"update_btn_{item.id}", type="secondary"):
@@ -344,13 +355,6 @@ try:
                                         npc.status = updated_status
                                         npc.description = updated_description
                                         npc.faction_id = updated_faction_id
-                                        npc.faction = (
-                                            session.query(Faction)
-                                            .filter(Faction.id == updated_faction_id)
-                                            .first()
-                                            if updated_faction_id
-                                            else None
-                                        )
                                         npc.stats = (
                                             {
                                                 k: v
