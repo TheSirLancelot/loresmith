@@ -198,6 +198,15 @@ st.divider()
 
 try:
     with get_session() as session:
+        all_factions = session.execute(select(Faction).order_by(Faction.name)).scalars().all()
+        faction_filter_options: list[Faction | None] = [None, *all_factions]
+        faction_filter = st.selectbox(
+            "Filter by Faction",
+            options=faction_filter_options,
+            format_func=lambda f: f.name if f else "All Factions",
+            key="faction_filter_selection",
+        )
+
         sort_choices = ["Name (A-Z)", "Name (Z-A)", "Status (A-Z)", "Status (Z-A)"]
         sort_selection = st.selectbox("Sort NPCs by", options=sort_choices)
 
@@ -209,24 +218,18 @@ try:
         }
         order_by_clause = sort_order_map[sort_selection]
 
+        base_query = select(NPC).options(joinedload(NPC.faction))
+        if faction_filter is not None:
+            base_query = base_query.where(NPC.faction_id == faction_filter.id)
+
         if sort_selection == "Status (Z-A)":
             records = (
-                session.execute(
-                    select(NPC)
-                    .options(joinedload(NPC.faction))
-                    .order_by(order_by_clause, NPC.name.asc())
-                )
+                session.execute(base_query.order_by(order_by_clause, NPC.name.asc()))
                 .scalars()
                 .all()
             )
         else:
-            records = (
-                session.execute(
-                    select(NPC).options(joinedload(NPC.faction)).order_by(order_by_clause)
-                )
-                .scalars()
-                .all()
-            )
+            records = session.execute(base_query.order_by(order_by_clause)).scalars().all()
 
         if not records:
             st.info("No NPCs found in the database.")
