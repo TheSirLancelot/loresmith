@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 import requests
 from app.components.layout import page_header
 from app.db.migrations import get_session
-from app.db.schema import NPC
+from app.db.schema import NPC, Faction
 from PIL import Image
 from sqlalchemy import select
 
@@ -98,9 +98,23 @@ with st.form("new_npc_form", clear_on_submit=True):
     st.subheader("Create New NPC")
     st.write("Name and status are required. Description is optional.")
 
+    try:
+        with get_session() as session:
+            factions = session.execute(select(Faction)).scalars().all()
+            factions = [None] + factions  # Allow empty selection
+            # faction_names = [faction.name for faction in factions if faction]
+    except Exception as exc:
+        st.error(
+            "Unable to connect to the database. "
+            + f"Please check your configuration or try again later. Error: {exc}"
+        )
+
     name_field = st.text_input("Name")
     status_field = st.text_input("Status")
-    description_field = st.text_area("Description")
+    description_field = st.text_area("Description (optional)")
+    faction_field = st.selectbox(
+        "Faction (optional)", options=factions, format_func=lambda f: f.name if f else "None"
+    )
     image_bytes_field = st.file_uploader(
         "Upload Image",
         key="new_image_upload",
@@ -115,6 +129,8 @@ with st.form("new_npc_form", clear_on_submit=True):
         name = name_field.strip()
         status = status_field.strip()
         description = description_field.strip()
+        faction_id = faction_field.id if faction_field else None
+        factopm = faction_field if faction_field else None
         image_bytes = None
         image_url = image_url_field.strip() if image_url_field else ""
         stats = dict(
@@ -230,6 +246,7 @@ try:
                         with col2:
                             st.write(f"Status: {item.status.upper()}")
                             st.write(f"Description: {item.description}")
+                            st.write(f"Faction: {item.faction.name if item.faction else 'N/A'}")
                             st.write(f"Stats: {item.stats if item.stats else 'N/A'}")
 
                             if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
@@ -253,6 +270,12 @@ try:
                             edit_npc_desc = (
                                 st.text_area("Description", value=item.description) or ""
                             )
+                            edit_npc_faction = st.selectbox(
+                                "Faction",
+                                options=factions,
+                                index=0 if not item.faction else factions.index(item.faction) + 1,
+                                format_func=lambda f: f.name if f else "None",
+                            )
                             edit_npc_image_bytes = st.file_uploader(
                                 "Upload Image",
                                 key="update_image_upload",
@@ -274,6 +297,8 @@ try:
                             updated_name = edit_npc_name.strip()
                             updated_status = edit_npc_status.strip()
                             updated_description = edit_npc_desc.strip()
+                            updated_faction_id = edit_npc_faction.id if edit_npc_faction else None
+                            updated_faction = edit_npc_faction if edit_npc_faction else None
                             updated_image_url = (
                                 edit_npc_image_url.strip() if edit_npc_image_url else ""
                             )
@@ -311,6 +336,8 @@ try:
                                         npc.name = updated_name
                                         npc.status = updated_status
                                         npc.description = updated_description
+                                        npc.faction_id = updated_faction_id
+                                        npc.faction = updated_faction
                                         npc.stats = (
                                             {
                                                 k: v
