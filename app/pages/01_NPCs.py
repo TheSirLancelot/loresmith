@@ -199,7 +199,7 @@ st.divider()
 try:
     with get_session() as session:
         all_factions = session.execute(select(Faction).order_by(Faction.name)).scalars().all()
-        faction_filter_options = [None] + all_factions
+        faction_filter_options: list[Faction | None] = [None, *all_factions]
         faction_filter = st.selectbox(
             "Filter by Faction",
             options=faction_filter_options,
@@ -229,11 +229,7 @@ try:
                 .all()
             )
         else:
-            records = (
-                session.execute(base_query.order_by(order_by_clause))
-                .scalars()
-                .all()
-            )
+            records = session.execute(base_query.order_by(order_by_clause)).scalars().all()
 
         if not records:
             st.info("No NPCs found in the database.")
