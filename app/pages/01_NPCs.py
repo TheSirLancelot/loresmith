@@ -104,6 +104,7 @@ with st.form("new_npc_form", clear_on_submit=True):
             factions = [None] + factions  # Allow empty selection
             # faction_names = [faction.name for faction in factions if faction]
     except Exception as exc:
+        factions = [None]
         st.error(
             "Unable to connect to the database. "
             + f"Please check your configuration or try again later. Error: {exc}"
