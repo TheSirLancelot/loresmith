@@ -1,3 +1,5 @@
+from sqlalchemy.orm import joinedload
+
 from app.db.migrations import get_session
 from app.db.schema import Faction
 import bootstrap  # noqa: F401
@@ -49,7 +51,12 @@ st.divider()
 
 try:
     with get_session() as session:
-        records = session.execute(select(Faction).order_by(Faction.name)).scalars().all()
+        records = (
+            session.execute(select(Faction).order_by(Faction.name))
+            .options(joinedload(Faction.npcs))
+            .scalars()
+            .all()
+        )
 
         if not records:
             st.info("No factions found in the database.")
