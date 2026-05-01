@@ -5,8 +5,9 @@ from datetime import date
 import streamlit as st
 from app.components.layout import page_header
 from app.db.migrations import get_session, setup_schema
-from app.db.schema import SessionLog
+from app.db.schema import NPC, SessionLog
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 page_header("Sessions", "Record events and evolving story arcs.")
 
@@ -14,6 +15,12 @@ schema_ok, schema_msg = setup_schema()
 if not schema_ok:
     st.warning(f"Schema: {schema_msg}")
     st.stop()
+
+try:
+    with get_session() as _db:
+        _all_npcs = _db.execute(select(NPC).order_by(NPC.name)).scalars().all()
+except Exception:
+    _all_npcs = []
 
 with st.form("new_session_form", clear_on_submit=True):
     st.subheader("Create Session Log")
@@ -28,30 +35,39 @@ with st.form("new_session_form", clear_on_submit=True):
     xp_field = st.number_input("XP Awarded", min_value=0, step=1, value=None)
     loot_field = st.text_area("Loot Awarded", height=80)
     duration_field = st.number_input("Duration (minutes)", min_value=1, step=1, value=None)
+    npc_field = st.multiselect(
+        "Tagged NPCs",
+        options=_all_npcs,
+        format_func=lambda n: n.name,
+    )
     submit = st.form_submit_button("Create Session")
 
     if submit:
         title = title_field.strip()
         notes = notes_field.strip()
+        selected_npc_ids = [n.id for n in npc_field]
 
         if not title:
             st.error("Title cannot be empty.")
         else:
             try:
                 with get_session() as session:
-                    session.add(
-                        SessionLog(
-                            title=title,
-                            session_date=session_date_field,
-                            session_number=session_number_field or None,
-                            notes=notes or None,
-                            recap=recap_field.strip() or None,
-                            next_session_hooks=hooks_field.strip() or None,
-                            xp_awarded=xp_field if xp_field is not None else None,
-                            loot_awarded=loot_field.strip() or None,
-                            duration_minutes=duration_field if duration_field is not None else None,
-                        )
+                    new_log = SessionLog(
+                        title=title,
+                        session_date=session_date_field,
+                        session_number=session_number_field or None,
+                        notes=notes or None,
+                        recap=recap_field.strip() or None,
+                        next_session_hooks=hooks_field.strip() or None,
+                        xp_awarded=xp_field if xp_field is not None else None,
+                        loot_awarded=loot_field.strip() or None,
+                        duration_minutes=duration_field if duration_field is not None else None,
                     )
+                    for npc_id in selected_npc_ids:
+                        npc = session.get(NPC, npc_id)
+                        if npc:
+                            new_log.npcs.append(npc)
+                    session.add(new_log)
                     session.commit()
 
                 st.success(f"Session '{title}' created!")
@@ -67,10 +83,16 @@ st.divider()
 try:
     with get_session() as session:
         records = (
-            session.execute(select(SessionLog).order_by(SessionLog.session_date.desc()))
+            session.execute(
+                select(SessionLog)
+                .options(joinedload(SessionLog.npcs))
+                .order_by(SessionLog.session_date.desc())
+            )
             .scalars()
+            .unique()
             .all()
         )
+        all_npcs_for_edit = session.execute(select(NPC).order_by(NPC.name)).scalars().all()
 
         if not records:
             st.info("No session logs found in the database.")
@@ -134,13 +156,25 @@ try:
                             value=item.duration_minutes,
                             key=f"edit_duration_{item.id}",
                         )
+                        current_npc_ids = {npc.id for npc in item.npcs}
+                        edit_npcs = st.multiselect(
+                            "Tagged NPCs",
+                            options=all_npcs_for_edit,
+                            default=[n for n in all_npcs_for_edit if n.id in current_npc_ids],
+                            format_func=lambda n: n.name,
+                            key=f"edit_npcs_{item.id}",
+                        )
 
                         if st.button("Update", key=f"update_btn_{item.id}", type="secondary"):
                             if not edit_title.strip():
                                 st.error("Title cannot be empty.")
                             else:
                                 try:
-                                    record = session.get(SessionLog, item.id)
+                                    record = session.get(
+                                        SessionLog,
+                                        item.id,
+                                        options=[joinedload(SessionLog.npcs)],
+                                    )
                                     if record is None:
                                         st.error("This session log no longer exists.")
                                         st.session_state[f"session_edit_{item.id}"] = False
@@ -156,6 +190,12 @@ try:
                                     record.duration_minutes = (
                                         edit_duration if edit_duration is not None else None
                                     )
+                                    selected_edit_npc_ids = {n.id for n in edit_npcs}
+                                    record.npcs = [
+                                        n
+                                        for n in all_npcs_for_edit
+                                        if n.id in selected_edit_npc_ids
+                                    ]
                                     session.commit()
                                     st.session_state[f"session_edit_{item.id}"] = False
                                     st.rerun()
@@ -185,6 +225,10 @@ try:
                             st.write(f"**XP Awarded:** {item.xp_awarded}")
                         if item.loot_awarded:
                             st.write(f"**Loot Awarded:** {item.loot_awarded}")
+                        npc_names = (
+                            ", ".join(npc.name for npc in item.npcs) if item.npcs else "None"
+                        )
+                        st.write(f"**NPCs:** {npc_names}")
 
                         if st.button("Edit", key=f"edit_btn_{item.id}", type="secondary"):
                             st.session_state[f"session_edit_{item.id}"] = True
