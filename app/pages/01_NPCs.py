@@ -268,12 +268,19 @@ try:
                             # This doubly protects us from None values
                             edit_npc_name = st.text_input("Name", value=item.name) or ""
                             edit_npc_status = st.text_input("Status", value=item.status) or ""
-                            edit_npc_desc = (
-                                st.text_area("Description", value=item.description) or ""
+                            edit_npc_desc = ()
+                            current_faction_index = next(
+                                (
+                                    index
+                                    for index, faction in enumerate(factions)
+                                    if (faction.id if faction else None) == item.faction_id
+                                ),
+                                0,
                             )
                             edit_npc_faction = st.selectbox(
                                 "Faction",
                                 options=factions,
+                                index=current_faction_index,
                                 format_func=lambda f: f.name if f else "None",
                             )
                             edit_npc_image_bytes = st.file_uploader(
@@ -337,7 +344,13 @@ try:
                                         npc.status = updated_status
                                         npc.description = updated_description
                                         npc.faction_id = updated_faction_id
-                                        npc.faction = updated_faction
+                                        npc.faction = (
+                                            session.query(Faction)
+                                            .filter(Faction.id == updated_faction_id)
+                                            .first()
+                                            if updated_faction_id
+                                            else None
+                                        )
                                         npc.stats = (
                                             {
                                                 k: v
