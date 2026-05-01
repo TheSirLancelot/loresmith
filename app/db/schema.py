@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import streamlit as st
-from sqlalchemy import DateTime, ForeignKey, LargeBinary, String, Text
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, LargeBinary, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -196,3 +196,26 @@ class Faction(IdMixin, TimestampMixin, Base):
             if st.button("Cancel", key="update_faction_cancel_btn", type="secondary"):
                 st.session_state[f"faction_edit_{self.id}"] = False
                 st.rerun()
+
+
+class SessionLog(TimestampMixin, Base):
+    """Session log entry for campaign history."""
+
+    __tablename__ = "session_log"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    session_date: Mapped[date] = mapped_column(Date, nullable=False)
+    session_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    recap: Mapped[str | None] = mapped_column(Text, nullable=True)
+    next_session_hooks: Mapped[str | None] = mapped_column(Text, nullable=True)
+    xp_awarded: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    loot_awarded: Mapped[str | None] = mapped_column(Text, nullable=True)
+    duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    def __repr__(self) -> str:
+        return (
+            f"<SessionLog(id={self.id!r}, title={self.title!r},"
+            f" session_date={self.session_date!r})>"
+        )
