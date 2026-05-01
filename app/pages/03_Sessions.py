@@ -13,6 +13,7 @@ page_header("Sessions", "Record events and evolving story arcs.")
 schema_ok, schema_msg = setup_schema()
 if not schema_ok:
     st.warning(f"Schema: {schema_msg}")
+    st.stop()
 
 with st.form("new_session_form", clear_on_submit=True):
     st.subheader("Create Session Log")
