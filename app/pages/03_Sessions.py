@@ -64,7 +64,7 @@ with st.form("new_session_form", clear_on_submit=True):
                         duration_minutes=duration_field if duration_field is not None else None,
                     )
                     if selected_npc_ids:
-                        new_log.npcs = (
+                        new_log.npcs = list(
                             session.execute(select(NPC).where(NPC.id.in_(selected_npc_ids)))
                             .scalars()
                             .all()
