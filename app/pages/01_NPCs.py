@@ -273,7 +273,6 @@ try:
                             edit_npc_faction = st.selectbox(
                                 "Faction",
                                 options=factions,
-                                index=0 if not item.faction else factions.index(item.faction) + 1,
                                 format_func=lambda f: f.name if f else "None",
                             )
                             edit_npc_image_bytes = st.file_uploader(
