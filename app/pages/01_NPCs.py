@@ -12,6 +12,7 @@ from app.db.migrations import get_session
 from app.db.schema import NPC, Faction
 from PIL import Image
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 page_header("NPCs", "Create, manage, and explore characters.")
 
@@ -210,12 +211,22 @@ try:
 
         if sort_selection == "Status (Z-A)":
             records = (
-                session.execute(select(NPC).order_by(order_by_clause, NPC.name.asc()))
+                session.execute(
+                    select(NPC)
+                    .options(joinedload(NPC.faction))
+                    .order_by(order_by_clause, NPC.name.asc())
+                )
                 .scalars()
                 .all()
             )
         else:
-            records = session.execute(select(NPC).order_by(order_by_clause)).scalars().all()
+            records = (
+                session.execute(
+                    select(NPC).options(joinedload(NPC.faction)).order_by(order_by_clause)
+                )
+                .scalars()
+                .all()
+            )
 
         if not records:
             st.info("No NPCs found in the database.")
@@ -277,11 +288,16 @@ try:
                             edit_npc_desc = (
                                 st.text_area("Description", value=item.description) or ""
                             )
+
                             current_faction_index = next(
                                 (
                                     index
                                     for index, faction in enumerate(factions)
-                                    if (faction.id if faction else None) == item.faction_id
+                                    if faction
+                                    and (
+                                        faction.id == item.faction_id
+                                        or (item.faction and faction.id == item.faction.id)
+                                    )
                                 ),
                                 0,
                             )
@@ -292,6 +308,7 @@ try:
                                 format_func=lambda f: f.name if f else "None",
                                 key="edit_faction_selection",
                             )
+
                             edit_npc_image_bytes = st.file_uploader(
                                 "Upload Image",
                                 key="update_image_upload",

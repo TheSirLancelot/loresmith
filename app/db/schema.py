@@ -139,6 +139,7 @@ class Faction(IdMixin, TimestampMixin, Base):
     def as_expander(self, session):
         with st.expander(f"{self.name}"):
             st.write(f"Description: {self.description}")
+            st.write(f"NPCs: {', '.join(npc.name for npc in self.npcs) if self.npcs else 'None'}")
 
             if st.button("Edit", key=f"edit_btn_{self.id}", type="secondary"):
                 st.session_state[f"faction_edit_{self.id}"] = True
