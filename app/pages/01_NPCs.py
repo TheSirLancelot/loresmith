@@ -211,13 +211,22 @@ try:
 
         if sort_selection == "Status (Z-A)":
             records = (
-                session.execute(select(NPC).order_by(order_by_clause, NPC.name.asc()))
-                .options(joinedload(NPC.faction))
+                session.execute(
+                    select(NPC)
+                    .options(joinedload(NPC.faction))
+                    .order_by(order_by_clause, NPC.name.asc())
+                )
                 .scalars()
                 .all()
             )
         else:
-            records = session.execute(select(NPC).order_by(order_by_clause)).scalars().all()
+            records = (
+                session.execute(
+                    select(NPC).options(joinedload(NPC.faction)).order_by(order_by_clause)
+                )
+                .scalars()
+                .all()
+            )
 
         if not records:
             st.info("No NPCs found in the database.")
