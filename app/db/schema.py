@@ -4,25 +4,40 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import streamlit as st
-from sqlalchemy import DateTime, LargeBinary, String, Text
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Table, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
     pass
 
 
+session_npc = Table(
+    "session_npc",
+    Base.metadata,
+    Column(
+        "session_id",
+        UUID(as_uuid=True),
+        ForeignKey("session_log.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "npc_id",
+        UUID(as_uuid=True),
+        ForeignKey("npc.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
+
+
 class IdMixin:
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
-    image_bytes: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
-    image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
 
 class TimestampMixin:
@@ -45,7 +60,16 @@ class NPC(IdMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    image_bytes: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     stats: Mapped[dict] = mapped_column(JSONB, default=lambda: {})
+    faction_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("faction.id", ondelete="SET NULL"), nullable=True
+    )
+    faction: Mapped[Faction | None] = relationship("Faction", back_populates="npcs")
+    sessions: Mapped[list[SessionLog]] = relationship(
+        "SessionLog", secondary="session_npc", back_populates="npcs"
+    )
 
     def __repr__(self) -> str:
         return f"<NPC(id={self.id!r}, name={self.name!r}, status={self.status!r})>"
@@ -118,3 +142,104 @@ class Location(IdMixin, TimestampMixin, Base):
             if st.button("Cancel", key="update_location_cancel_btn", type="secondary"):
                 st.session_state[f"location_edit_{self.id}"] = False
                 st.rerun()
+
+
+class Faction(IdMixin, TimestampMixin, Base):
+    """Faction entity for campaign management."""
+
+    __tablename__ = "faction"
+
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    npcs: Mapped[list[NPC]] = relationship("NPC", back_populates="faction", cascade="save-update")
+
+    def __repr__(self) -> str:
+        return f"<Faction(id={self.id!r}, name={self.name!r})>"
+
+    @st.fragment
+    def as_expander(self, session):
+        with st.expander(f"{self.name}"):
+            st.write(f"Description: {self.description}")
+            st.write(f"NPCs: {', '.join(npc.name for npc in self.npcs) if self.npcs else 'None'}")
+
+            if st.button("Edit", key=f"edit_btn_{self.id}", type="secondary"):
+                st.session_state[f"faction_edit_{self.id}"] = True
+                st.rerun()
+
+            if st.button("Delete", key=f"del_btn_{self.id}", type="primary"):
+                try:
+                    faction = session.get(Faction, self.id)
+                    if faction:
+                        session.delete(faction)
+                        session.commit()
+                        st.session_state.pop(f"faction_edit_{self.id}", None)
+                        st.rerun()
+                except Exception as exc:
+                    session.rollback()
+                    st.error(
+                        "Unable to connect to the database. "
+                        + "Please check your configuration or try again later."
+                    )
+                    logging.getLogger("connection").exception(exc)
+
+    @st.fragment
+    def as_edit_expander(self, session):
+        with st.expander(f"{self.name}"):
+            edit_faction_name = st.text_input("Name", value=self.name)
+            edit_faction_desc = st.text_area("Description", value=self.description)
+
+            if st.button("Update", key=f"update_faction_btn_{self.id}", type="secondary"):
+                if not edit_faction_name.strip():
+                    st.error("Name cannot be empty.")
+                else:
+                    try:
+                        faction = session.get(Faction, self.id)
+                        if faction is None:
+                            st.error("This faction no longer exists.")
+                            del st.session_state[f"faction_edit_{self.id}"]
+                            st.rerun()
+                            return
+
+                        faction.name = edit_faction_name.strip()
+                        faction.description = edit_faction_desc.strip()
+                        session.commit()
+
+                        st.session_state[f"faction_edit_{self.id}"] = False
+
+                        st.rerun()
+                    except Exception as exc:
+                        session.rollback()
+                        st.error(
+                            "Unable to connect to the database. "
+                            + "Please check your configuration or try again later."
+                        )
+                        logging.getLogger("connection").exception(exc)
+            if st.button("Cancel", key="update_faction_cancel_btn", type="secondary"):
+                st.session_state[f"faction_edit_{self.id}"] = False
+                st.rerun()
+
+
+class SessionLog(TimestampMixin, Base):
+    """Session log entry for campaign history."""
+
+    __tablename__ = "session_log"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    session_date: Mapped[date] = mapped_column(Date, nullable=False)
+    session_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    recap: Mapped[str | None] = mapped_column(Text, nullable=True)
+    next_session_hooks: Mapped[str | None] = mapped_column(Text, nullable=True)
+    xp_awarded: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    loot_awarded: Mapped[str | None] = mapped_column(Text, nullable=True)
+    duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    npcs: Mapped[list[NPC]] = relationship(
+        "NPC", secondary="session_npc", back_populates="sessions"
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<SessionLog(id={self.id!r}, title={self.title!r},"
+            f" session_date={self.session_date!r})>"
+        )
