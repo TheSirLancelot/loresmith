@@ -1,0 +1,34 @@
+Issue #,Title,Status,Story Points,Business Value,Milestone
+1,Create NPC,Done,3,10,Core Campaign Management
+2,View NPC List,Done,2,10,Core Campaign Management
+3,Edit NPC,Done,3,9,Core Campaign Management
+4,Delete NPC,Done,2,8,Core Campaign Management
+38,Add NPC Image,Done,5,8,Core Campaign Management
+39,Add NPC Stat Block,Done,5,9,Core Campaign Management
+11,Filter NPCs by Faction,Done,3,6,Core Campaign Management
+12,Sort NPC List,Done,2,5,Core Campaign Management
+40,Create Location,Done,3,8,Core Campaign Management
+41,View Locations,Done,2,7,Core Campaign Management
+42,Edit Locations,Done,3,7,Core Campaign Management
+43,Delete Location,Done,2,6,Core Campaign Management
+31,Default ID schema fix,Done,1,8,Core Campaign Management
+5,Create Faction,Done,3,8,Factions & Relationships
+6,Assign NPC to Faction,Done,3,7,Factions & Relationships
+7,View Faction Members,Done,2,6,Factions & Relationships
+44,Associate Entities with Locations,Sprint Backlog,8,7,Factions & Relationships
+8,Create Session Log,Done,5,9,Session Tracking
+9,Tag NPCs in Session,Done,5,8,Session Tracking
+10,Search Sessions,Done,3,7,Session Tracking
+13,View Relationship Graph,Sprint Backlog,8,5,Visualization
+45,Map Visualization,Product Backlog,1,6,Visualization
+14,View Campaign Timeline,Product Backlog,5,5,Visualization
+15,Persist Data,Done,8,10,Infrastructure
+50,Implement Database Migration Strategy,Product Backlog,5,5,Infrastructure
+26,Full-text search across NPCs and sessions,Sprint Backlog,5,3,Future Iterations
+27,Direct NPC-to-NPC relationships,Sprint Backlog,8,4,Future Iterations
+23,User Authentication and Access Control,Product Backlog,13,4,Future Iterations
+24,Multiple Campaigns with Scoped Data Access,Product Backlog,13,5,Future Iterations
+25,Caching Layer for Database Queries,Product Backlog,5,2,Future Iterations
+28,Summary metrics (NPC refs / session frequency),Product Backlog,5,3,Future Iterations
+29,Export campaign data to JSON/CSV,Product Backlog,3,4,Future Iterations
+30,Unit and integration tests,Product Backlog,8,5,Future Iterations
