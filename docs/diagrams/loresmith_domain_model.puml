@@ -1,0 +1,66 @@
+@startuml LoreSmith Domain Model
+title LoreSmith Domain Model
+
+skinparam dpi 150
+skinparam roundcorner 0
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam ArrowColor Black
+skinparam ArrowThickness 1
+' skinparam linetype ortho
+
+hide circle
+hide empty methods
+
+class NPC {
+  +npc_id
+  +name
+  +status
+  +description
+  +image_url
+  +stat_block
+}
+
+class Faction {
+  +faction_id
+  +name
+  +description
+  +type
+}
+
+class Location {
+  +location_id
+  +name
+  +description
+  +region
+}
+
+class SessionLog {
+  +session_id
+  +title
+  +session_date
+  +notes
+}
+
+class Campaign {
+  +campaign_id
+  +name
+  +description
+}
+
+note right of Campaign
+  Planned feature
+  Not implemented in current scope
+end note
+
+Campaign "1" -- "0..*" NPC : contains
+Campaign "1" -- "0..*" Faction : contains
+Campaign "1" -- "0..*" Location : contains
+Campaign "1" -- "0..*" SessionLog : contains
+
+Faction "1" -- "0..*" NPC : has members
+NPC "0..*" -- "0..*" SessionLog : appears in
+NPC "0..*" -- "0..*" Location : associated with
+Faction "0..*" -- "0..*" Location : operates in
+
+@enduml
